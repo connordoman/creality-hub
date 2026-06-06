@@ -1,0 +1,96 @@
+import type {
+  MoonrakerHistoryJob,
+  MoonrakerHistoryResponse,
+  PrintHistoryJob,
+} from "./types";
+
+function readMetadataNumber(
+  metadata: Record<string, unknown> | undefined,
+  keys: string[],
+): number | null {
+  if (!metadata) return null;
+
+  for (const key of keys) {
+    const value = metadata[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
+      return Number(value);
+    }
+  }
+
+  return null;
+}
+
+function normalizeJob(job: MoonrakerHistoryJob): PrintHistoryJob {
+  const filamentUsedMm =
+    job.filament_used ??
+    job.filament_used_total ??
+    readMetadataNumber(job.metadata, [
+      "filament_used",
+      "filament_used_total",
+      "filament_total",
+    ]);
+
+  const filamentUsedG = readMetadataNumber(job.metadata, [
+    "filament_weight_total",
+    "filament_weight",
+    "filament_total_weight",
+  ]);
+
+  return {
+    id: job.job_id ?? job.filename ?? crypto.randomUUID(),
+    filename: job.filename ?? "Unknown",
+    status: job.status ?? "unknown",
+    startTime: job.start_time ?? null,
+    endTime: job.end_time ?? null,
+    durationSeconds: job.print_duration ?? job.total_duration ?? null,
+    filamentUsedMm,
+    filamentUsedG,
+  };
+}
+
+export interface PrintHistoryPage {
+  jobs: PrintHistoryJob[];
+  totalCount: number;
+}
+
+export async function fetchPrintHistoryPage({
+  limit,
+  start,
+}: {
+  limit: number;
+  start: number;
+}): Promise<PrintHistoryPage> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    start: String(start),
+  });
+
+  const response = await fetch(`/api/printer/history?${params.toString()}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch print history (${response.status})`);
+  }
+
+  const data = (await response.json()) as MoonrakerHistoryResponse;
+  const jobs = data.result?.jobs ?? [];
+  const totalCount =
+    data.result?.total_jobs ??
+    data.result?.count ??
+    jobs.length;
+
+  return {
+    jobs: jobs.map(normalizeJob),
+    totalCount,
+  };
+}
+
+/** @deprecated Use fetchPrintHistoryPage for paginated history. */
+export async function fetchPrintHistory(
+  limit = 50,
+): Promise<PrintHistoryJob[]> {
+  const page = await fetchPrintHistoryPage({ limit, start: 0 });
+  return page.jobs;
+}
