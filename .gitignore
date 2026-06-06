@@ -20,6 +20,9 @@
 # production
 /build
 
+# persisted app settings (local dev)
+/data
+
 # misc
 .DS_Store
 *.pem

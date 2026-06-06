@@ -1,9 +1,11 @@
-import { moonrakerUrl, MOONRAKER_PORT, PRINTER_HOST } from "@/lib/creality/config";
+import { moonrakerUrl, MOONRAKER_PORT } from "@/lib/creality/config";
+import { getPrinterHost } from "@/lib/settings/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const printerHost = await getPrinterHost();
   const url = moonrakerUrl(
-    PRINTER_HOST,
+    printerHost,
     "/printer/objects/query?extruder=temperature,target,power&heater_bed=temperature,target,power",
   );
 
@@ -28,7 +30,7 @@ export async function GET() {
     return NextResponse.json(
       {
         error: message,
-        host: PRINTER_HOST,
+        host: printerHost,
         port: MOONRAKER_PORT,
       },
       { status: 502 },

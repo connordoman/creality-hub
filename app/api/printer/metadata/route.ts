@@ -1,8 +1,10 @@
-import { moonrakerUrl, MOONRAKER_PORT, PRINTER_HOST } from "@/lib/creality/config";
+import { getPrinterHost } from "@/lib/settings/server";
+import { moonrakerUrl, MOONRAKER_PORT } from "@/lib/creality/config";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const filename = request.nextUrl.searchParams.get("filename")?.trim();
+  const printerHost = await getPrinterHost();
 
   if (!filename) {
     return NextResponse.json(
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   const url = moonrakerUrl(
-    PRINTER_HOST,
+    printerHost,
     `/server/files/metadata?filename=${encodeURIComponent(filename)}`,
   );
 
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: message,
-        host: PRINTER_HOST,
+        host: printerHost,
         port: MOONRAKER_PORT,
       },
       { status: 502 },

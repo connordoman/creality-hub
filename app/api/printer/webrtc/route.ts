@@ -1,4 +1,5 @@
-import { PRINTER_HOST, webrtcSignalingUrl } from "@/lib/creality/config";
+import { webrtcSignalingUrl } from "@/lib/creality/config";
+import { getPrinterHost } from "@/lib/settings/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -9,7 +10,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(webrtcSignalingUrl(PRINTER_HOST), {
+    const printerHost = await getPrinterHost();
+    const response = await fetch(webrtcSignalingUrl(printerHost), {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body,

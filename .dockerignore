@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+
+# Build output
+.next
+out
+build
+
+# Local data (use CREALITY_HUB_DATA_DIR in production)
+data
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Git / editor
+.git
+.gitignore
+.DS_Store
+*.md
+!README.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Debug / tooling
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+coverage
+.vercel
+*.tsbuildinfo
+next-env.d.ts

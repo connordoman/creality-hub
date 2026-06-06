@@ -1,6 +1,5 @@
 "use client";
 
-import { PRINTER_HOST } from "@/lib/creality/config";
 import { derivePrintStatus, formatDuration } from "@/lib/creality/status";
 import type {
   PrintStatus,
@@ -22,7 +21,7 @@ function mergeTelemetry(
   return { ...serverTelemetry, ...optimisticPatch };
 }
 
-export function usePrinter(host = PRINTER_HOST) {
+export function usePrinter(host: string | undefined) {
   const clientRef = useRef<CrealityWebSocketClient | null>(null);
   const [serverTelemetry, setServerTelemetry] = useState<PrinterTelemetry>({});
   const [optimisticPatch, setOptimisticPatch] =
@@ -43,6 +42,10 @@ export function usePrinter(host = PRINTER_HOST) {
   );
 
   useEffect(() => {
+    if (!host) {
+      return;
+    }
+
     const client = new CrealityWebSocketClient(host);
     clientRef.current = client;
 
@@ -66,6 +69,9 @@ export function usePrinter(host = PRINTER_HOST) {
       unsubscribeConnection();
       client.stop();
       clientRef.current = null;
+      setServerTelemetry({});
+      setOptimisticPatch(null);
+      setIsConnected(false);
     };
   }, [host, notifyTelemetryListeners]);
 

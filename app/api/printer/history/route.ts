@@ -1,4 +1,5 @@
-import { moonrakerUrl, MOONRAKER_PORT, PRINTER_HOST } from "@/lib/creality/config";
+import { moonrakerUrl, MOONRAKER_PORT } from "@/lib/creality/config";
+import { getPrinterHost } from "@/lib/settings/server";
 import { NextRequest, NextResponse } from "next/server";
 
 interface MoonrakerTotalsResponse {
@@ -12,11 +13,12 @@ interface MoonrakerTotalsResponse {
 export async function GET(request: NextRequest) {
   const limit = request.nextUrl.searchParams.get("limit") ?? "10";
   const start = request.nextUrl.searchParams.get("start") ?? "0";
+  const printerHost = await getPrinterHost();
   const listUrl = moonrakerUrl(
-    PRINTER_HOST,
+    printerHost,
     `/server/history/list?limit=${encodeURIComponent(limit)}&start=${encodeURIComponent(start)}&order=desc`,
   );
-  const totalsUrl = moonrakerUrl(PRINTER_HOST, "/server/history/totals");
+  const totalsUrl = moonrakerUrl(printerHost, "/server/history/totals");
 
   try {
     const [listResponse, totalsResponse] = await Promise.all([
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: message,
-        host: PRINTER_HOST,
+        host: printerHost,
         port: MOONRAKER_PORT,
       },
       { status: 502 },

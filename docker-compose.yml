@@ -1,0 +1,20 @@
+# Local development — builds the image on your machine.
+# Do not paste this file into TrueNAS Custom App (build: is not supported there).
+# Use docker-compose.truenas.yml on TrueNAS instead.
+
+services:
+  creality-hub:
+    build: .
+    image: creality-hub:local
+    container_name: creality-hub
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      CREALITY_HUB_DATA_DIR: /data
+      PRINTER_HOST: 10.0.0.184
+    volumes:
+      - creality-hub-data:/data
+
+volumes:
+  creality-hub-data:

@@ -1,11 +1,11 @@
 "use client";
 
-import { PRINTER_HOST } from "@/lib/creality/config";
 import {
   getPrinterCommandPendingValue,
   usePrinterCommandMutation,
 } from "@/hooks/use-printer-command";
 import { usePrinter } from "@/hooks/use-printer";
+import { usePrinterSettings } from "@/context/printer-settings";
 import {
   chamberLightCommand,
   getChamberLightDisplayState,
@@ -15,10 +15,13 @@ import { ChamberLight } from "./chamber-light";
 import { ConnectionBadge } from "./connection-badge";
 import { PrintControls } from "./print-controls";
 import { PrintHistory } from "./print-history";
+import { PrinterSettingsDialog } from "./printer-settings-dialog";
 import { StatusCard } from "./status-card";
 import { TemperatureCard } from "./temperature-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Dashboard() {
+  const { printerHost, isLoading, error } = usePrinterSettings();
   const {
     telemetry,
     status,
@@ -27,7 +30,7 @@ export function Dashboard() {
     remainingSeconds,
     sendCommand,
     commandContext,
-  } = usePrinter();
+  } = usePrinter(printerHost);
 
   const chamberLightMutation = usePrinterCommandMutation(
     commandContext,
@@ -41,6 +44,26 @@ export function Dashboard() {
     ),
   );
 
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (error || !printerHost) {
+    return (
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 p-6">
+        <p className="text-sm text-destructive">
+          {error?.message ?? "Unable to load printer settings."}
+        </p>
+        <PrinterSettingsDialog />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -49,10 +72,13 @@ export function Dashboard() {
             Creality K1C Hub
           </h1>
           <p className="text-sm text-muted-foreground">
-            Connected to {PRINTER_HOST}
+            Connected to {printerHost}
           </p>
         </div>
-        <ConnectionBadge connected={isConnected} />
+        <div className="flex items-center gap-2">
+          <PrinterSettingsDialog />
+          <ConnectionBadge connected={isConnected} />
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
