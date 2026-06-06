@@ -103,13 +103,19 @@ export function StatusCard({
           Print Status
         </CardTitle>
         <CardDescription>{filename}</CardDescription>
-        <CardAction>
-          <p className="font-medium text-right">
-            <span>{expectedFilament}</span>
-            <br />
-            <span>{formatDuration(elapsedSeconds + remainingSeconds)}</span>
-          </p>
-        </CardAction>
+        {isPrinting ? (
+          <CardAction>
+            <p className="font-medium text-right">
+              <span>{expectedFilament}</span>
+              <br />
+              <span>
+                {isPrinting
+                  ? formatDuration(elapsedSeconds + remainingSeconds)
+                  : "\u2014"}
+              </span>
+            </p>
+          </CardAction>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-4">
         <Badge variant={statusVariant[status]} className="capitalize">
@@ -145,15 +151,20 @@ export function StatusCard({
         </div>
       </CardContent>
 
-      {showScheduleFooter ? (
-        <CardFooter className="flex-col items-start gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>Started {isHydrated ? formatDateTime(printStartTime) : "--"}</p>
-          <p>
-            Finishes{" "}
-            {isHydrated ? formatDateTime(expectedCompletionTime) : "--"}
-          </p>
-        </CardFooter>
-      ) : null}
+      <CardFooter className="flex-col items-start gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        {showScheduleFooter ? (
+          <>
+            <p>
+              {"Started "}
+              {isHydrated ? formatDateTime(printStartTime) : "--"}
+            </p>
+            <p>
+              {"Expected finish "}
+              {isHydrated ? formatDateTime(expectedCompletionTime) : "--"}
+            </p>
+          </>
+        ) : null}
+      </CardFooter>
     </Card>
   );
 }
