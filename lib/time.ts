@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 interface DurationParts {
   hours: number;
   minutes: number;
@@ -85,4 +87,18 @@ export function formatDurationISO8601(duration: number): string {
   }
 
   return "PT" + parts.join("");
+}
+
+const DATE_TIME_FORMAT = "MMMM D YYYY [at] HH:mm:ss";
+
+export function formatDateTime(
+  timestamp: Date | number | null | undefined
+): string {
+  if (timestamp === null || timestamp === undefined) {
+    return "--";
+  }
+  if (timestamp instanceof Date) {
+    return dayjs(timestamp).format(DATE_TIME_FORMAT);
+  }
+  return dayjs(timestamp * 1000).format(DATE_TIME_FORMAT);
 }

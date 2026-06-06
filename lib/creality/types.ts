@@ -60,6 +60,7 @@ export interface PrinterTelemetry {
   dProgress?: number;
   printJobTime?: number;
   printLeftTime?: number;
+  printStartTime?: number;
   printFileName?: string;
   lightSw?: number;
   state?: number;
@@ -95,6 +96,8 @@ export interface PrintFileMetadata {
   filamentTotalG: number | null;
   /** Slicer-estimated print duration, in seconds. */
   estimatedTimeSeconds: number | null;
+  /** Unix timestamp when the current print job started. */
+  printStartTime: number | null;
 }
 
 export interface MoonrakerMetadataResponse {

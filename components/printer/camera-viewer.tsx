@@ -2,12 +2,19 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CrealityWebRTCClient } from "@/lib/creality/webrtc-client";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircleIcon, CctvIcon, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Spinner } from "../ui/spinner";
 
 export function CameraViewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -65,6 +72,21 @@ export function CameraViewer() {
           <CctvIcon className="size-4" />
           Chamber Camera
         </CardTitle>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isConnecting}
+            onClick={() => void connect()}
+          >
+            {isConnecting ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <RefreshCw data-icon="inline-start" />
+            )}
+            {isConnecting ? "Connecting..." : "Reconnect"}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="relative aspect-video overflow-hidden border border-border/60 bg-black">
@@ -94,16 +116,6 @@ export function CameraViewer() {
             </AlertDescription>
           </Alert>
         ) : null}
-
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isConnecting}
-          onClick={() => void connect()}
-        >
-          <RefreshCw data-icon="inline-start" />
-          {isConnecting ? "Connecting..." : "Reconnect"}
-        </Button>
       </CardContent>
     </Card>
   );

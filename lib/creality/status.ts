@@ -1,4 +1,80 @@
-import type { PrintStatus, PrinterTelemetry } from "./types";
+import type {
+  PrintFileMetadata,
+  PrintStatus,
+  PrinterTelemetry,
+} from "./types";
+
+const ACTIVE_PRINT_STATUSES: PrintStatus[] = [
+  "processing",
+  "printing",
+  "paused",
+];
+
+function readUnixTimestamp(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.floor(value);
+  }
+
+  return null;
+}
+
+export function isActivePrintStatus(status: PrintStatus): boolean {
+  return ACTIVE_PRINT_STATUSES.includes(status);
+}
+
+export function getPrintStartTime(
+  telemetry: PrinterTelemetry,
+  metadata: PrintFileMetadata | null | undefined,
+  elapsedSeconds: number,
+  status: PrintStatus,
+): number | null {
+  const fromMetadata = metadata?.printStartTime;
+  if (fromMetadata != null) {
+    return fromMetadata;
+  }
+
+  const fromTelemetry = readUnixTimestamp(telemetry.printStartTime);
+  if (fromTelemetry != null) {
+    return fromTelemetry;
+  }
+
+  if (isActivePrintStatus(status) && elapsedSeconds > 0) {
+    return Math.floor(Date.now() / 1000) - elapsedSeconds;
+  }
+
+  return null;
+}
+
+export function getExpectedCompletionTime(
+  startTime: number | null,
+  elapsedSeconds: number,
+  remainingSeconds: number,
+  estimatedTimeSeconds: number | null,
+  status: PrintStatus,
+): number | null {
+  if (startTime == null) {
+    if (isActivePrintStatus(status) && remainingSeconds > 0) {
+      return Math.floor(Date.now() / 1000) + remainingSeconds;
+    }
+
+    return null;
+  }
+
+  const liveTotal = elapsedSeconds + remainingSeconds;
+  if (isActivePrintStatus(status) && liveTotal > 0) {
+    return startTime + liveTotal;
+  }
+
+  if (estimatedTimeSeconds != null && estimatedTimeSeconds > 0) {
+    return startTime + estimatedTimeSeconds;
+  }
+
+  if (status === "completed" && elapsedSeconds > 0) {
+    return startTime + elapsedSeconds;
+  }
+
+  return null;
+}
 
 export function coerceNumbers(
   data: Record<string, unknown>,

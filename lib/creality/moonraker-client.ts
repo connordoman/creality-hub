@@ -127,6 +127,7 @@ function normalizePrintMetadata(
       "filament_total_weight",
     ]),
     estimatedTimeSeconds: readMetadataNumber(metadata, ["estimated_time"]),
+    printStartTime: readMetadataNumber(metadata, ["print_start_time"]),
   };
 }
 

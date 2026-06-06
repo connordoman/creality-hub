@@ -5,14 +5,7 @@ import { formatFilamentUsed } from "@/lib/creality/status";
 import type { PrintHistoryJob } from "@/lib/creality/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Duration } from "../ui/duration";
-
-function formatTimestamp(timestamp: number | null): string {
-  if (timestamp === null || !Number.isFinite(timestamp)) {
-    return "--";
-  }
-
-  return new Date(timestamp * 1000).toLocaleString();
-}
+import { DateTime } from "../ui/datetime";
 
 const statusVariant: Record<
   string,
@@ -55,17 +48,18 @@ export const printHistoryColumns: ColumnDef<PrintHistoryJob>[] = [
   {
     accessorKey: "startTime",
     header: "Started",
-    cell: ({ row }) => formatTimestamp(row.getValue("startTime")),
+    cell: ({ row }) => <DateTime date={Number(row.getValue("startTime"))} />,
   },
   {
     accessorKey: "durationSeconds",
     header: "Duration",
-    cell: ({ row }) => (
-      <Duration
-        duration={row.getValue("durationSeconds") ?? 0}
-        realTime={false}
-      />
-    ),
+    cell: ({ row }) => {
+      const duration = Number(row.getValue("durationSeconds")) ?? 0;
+      if (duration === 0) {
+        return "\u2014:\u2014:\u2014";
+      }
+      return <Duration duration={duration} realTime={false} />;
+    },
   },
   {
     id: "filamentUsed",

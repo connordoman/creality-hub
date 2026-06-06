@@ -8,6 +8,7 @@ const EMPTY_METADATA: PrintFileMetadata = {
   filamentTotalMm: null,
   filamentTotalG: null,
   estimatedTimeSeconds: null,
+  printStartTime: null,
 };
 
 export function usePrintMetadata(filename: string | undefined) {

@@ -11,15 +11,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { formatFilamentUsed, getProgress } from "@/lib/creality/status";
+import {
+  formatFilamentUsed,
+  getExpectedCompletionTime,
+  getPrintStartTime,
+  getProgress,
+  isActivePrintStatus,
+} from "@/lib/creality/status";
 import type { PrintStatus, PrinterTelemetry } from "@/lib/creality/types";
 import { Field, FieldLabel } from "../ui/field";
 import { Duration } from "../ui/duration";
+import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
 import { PrinterIcon } from "lucide-react";
-import { Separator } from "../ui/separator";
-import { formatDuration } from "@/lib/time";
+import { formatDuration, formatDateTime } from "@/lib/time";
+import { useMemo } from "react";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -58,6 +65,33 @@ export function StatusCard({
     metadata?.filamentTotalMm,
     metadata?.filamentTotalG
   );
+  const isHydrated = useIsHydrated();
+  const printStartTime = useMemo(
+    () => getPrintStartTime(telemetry, metadata, elapsedSeconds, status),
+    [telemetry, metadata, elapsedSeconds, status]
+  );
+  const expectedCompletionTime = useMemo(
+    () =>
+      getExpectedCompletionTime(
+        printStartTime,
+        elapsedSeconds,
+        remainingSeconds,
+        metadata?.estimatedTimeSeconds ?? null,
+        status
+      ),
+    [
+      printStartTime,
+      elapsedSeconds,
+      remainingSeconds,
+      metadata?.estimatedTimeSeconds,
+      status,
+    ]
+  );
+  const showScheduleFooter =
+    Boolean(formatFileName(telemetry.printFileName)) &&
+    (isActivePrintStatus(status) ||
+      printStartTime != null ||
+      expectedCompletionTime != null);
 
   const isPrinting = status === "printing";
 
@@ -103,13 +137,23 @@ export function StatusCard({
             <p className="text-muted-foreground text-right">Remaining</p>
             <Duration
               duration={isPrinting ? remainingSeconds : 0}
-              className="font-medium text-xl"
+              className="font-medium text-xl text-right"
               realTime={isPrinting}
               countDown
             />
           </div>
         </div>
       </CardContent>
+
+      {showScheduleFooter ? (
+        <CardFooter className="flex-col items-start gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>Started {isHydrated ? formatDateTime(printStartTime) : "--"}</p>
+          <p>
+            Expected completion{" "}
+            {isHydrated ? formatDateTime(expectedCompletionTime) : "--"}
+          </p>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }
