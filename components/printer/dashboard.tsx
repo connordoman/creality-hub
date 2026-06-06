@@ -1,7 +1,15 @@
 "use client";
 
 import { PRINTER_HOST } from "@/lib/creality/config";
+import {
+  getPrinterCommandPendingValue,
+  usePrinterCommandMutation,
+} from "@/hooks/use-printer-command";
 import { usePrinter } from "@/hooks/use-printer";
+import {
+  chamberLightCommand,
+  getChamberLightDisplayState,
+} from "@/lib/creality/printer-commands";
 import { CameraViewer } from "./camera-viewer";
 import { ChamberLight } from "./chamber-light";
 import { ConnectionBadge } from "./connection-badge";
@@ -18,7 +26,20 @@ export function Dashboard() {
     elapsedSeconds,
     remainingSeconds,
     sendCommand,
+    commandContext,
   } = usePrinter();
+
+  const chamberLightMutation = usePrinterCommandMutation(
+    commandContext,
+    chamberLightCommand,
+  );
+  const chamberLightOn = getChamberLightDisplayState(
+    telemetry,
+    getPrinterCommandPendingValue(
+      chamberLightMutation.isPending,
+      chamberLightMutation.variables,
+    ),
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
@@ -48,10 +69,10 @@ export function Dashboard() {
         <div className="row-start-1 md:row-start-auto space-y-6">
           <CameraViewer />
           <ChamberLight
-            telemetry={telemetry}
-            onToggle={(enabled) =>
-              sendCommand(enabled ? "light-on" : "light-off")
-            }
+            isOn={chamberLightOn}
+            pending={chamberLightMutation.isPending}
+            disabled={!isConnected}
+            onToggle={(enabled) => chamberLightMutation.mutate(enabled)}
           />
         </div>
       </div>

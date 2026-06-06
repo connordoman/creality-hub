@@ -8,17 +8,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import type { PrinterTelemetry } from "@/lib/creality/types";
 import { Lightbulb } from "./lightbulb";
 
 interface ChamberLightProps {
-  telemetry: PrinterTelemetry;
+  isOn: boolean;
+  pending?: boolean;
+  disabled?: boolean;
   onToggle: (enabled: boolean) => void;
 }
 
-export function ChamberLight({ telemetry, onToggle }: ChamberLightProps) {
-  const isOn = telemetry.lightSw === 1;
-
+export function ChamberLight({
+  isOn,
+  pending = false,
+  disabled = false,
+  onToggle,
+}: ChamberLightProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,6 +38,7 @@ export function ChamberLight({ telemetry, onToggle }: ChamberLightProps) {
         </span>
         <Switch
           checked={isOn}
+          disabled={disabled || pending}
           onCheckedChange={(checked) => onToggle(checked)}
         />
       </CardContent>

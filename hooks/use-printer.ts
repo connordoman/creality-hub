@@ -8,23 +8,55 @@ import type {
   PrinterTelemetry,
 } from "@/lib/creality/types";
 import { CrealityWebSocketClient } from "@/lib/creality/websocket-client";
+import type { PrinterCommandContext } from "@/hooks/use-printer-command";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+function mergeTelemetry(
+  serverTelemetry: PrinterTelemetry,
+  optimisticPatch: Partial<PrinterTelemetry> | null
+): PrinterTelemetry {
+  if (!optimisticPatch) {
+    return serverTelemetry;
+  }
+
+  return { ...serverTelemetry, ...optimisticPatch };
+}
 
 export function usePrinter(host = PRINTER_HOST) {
   const clientRef = useRef<CrealityWebSocketClient | null>(null);
-  const [telemetry, setTelemetry] = useState<PrinterTelemetry>({});
+  const [serverTelemetry, setServerTelemetry] = useState<PrinterTelemetry>({});
+  const [optimisticPatch, setOptimisticPatch] =
+    useState<Partial<PrinterTelemetry> | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  const serverTelemetryRef = useRef(serverTelemetry);
+
+  const telemetryListenersRef = useRef(
+    new Set<(telemetry: PrinterTelemetry) => void>()
+  );
+
+  const notifyTelemetryListeners = useCallback(
+    (telemetry: PrinterTelemetry) => {
+      telemetryListenersRef.current.forEach((listener) => listener(telemetry));
+    },
+    []
+  );
 
   useEffect(() => {
     const client = new CrealityWebSocketClient(host);
     clientRef.current = client;
 
-    const unsubscribeState = client.onStateChange(setTelemetry);
+    const unsubscribeState = client.onStateChange((telemetry) => {
+      setServerTelemetry(telemetry);
+      notifyTelemetryListeners(telemetry);
+    });
     const unsubscribeConnection = client.onConnectionChange(setIsConnected);
 
     const init = async () => {
       client.start();
-      setTelemetry(client.getTelemetry());
+      const telemetry = client.getTelemetry();
+      setServerTelemetry(telemetry);
+      notifyTelemetryListeners(telemetry);
       setIsConnected(client.isConnected());
     };
     void init();
@@ -35,7 +67,12 @@ export function usePrinter(host = PRINTER_HOST) {
       client.stop();
       clientRef.current = null;
     };
-  }, [host]);
+  }, [host, notifyTelemetryListeners]);
+
+  const telemetry = useMemo(
+    () => mergeTelemetry(serverTelemetry, optimisticPatch),
+    [serverTelemetry, optimisticPatch]
+  );
 
   const status: PrintStatus = useMemo(
     () => derivePrintStatus(telemetry, isConnected),
@@ -45,6 +82,27 @@ export function usePrinter(host = PRINTER_HOST) {
   const sendCommand = useCallback((command: PrinterCommand) => {
     clientRef.current?.sendCommand(command);
   }, []);
+
+  const subscribeTelemetry = useCallback(
+    (listener: (telemetry: PrinterTelemetry) => void) => {
+      telemetryListenersRef.current.add(listener);
+      return () => {
+        telemetryListenersRef.current.delete(listener);
+      };
+    },
+    []
+  );
+
+  const commandContext = useMemo<PrinterCommandContext>(
+    () => ({
+      sendCommand,
+      getTelemetry: () => serverTelemetryRef.current,
+      subscribeTelemetry,
+      applyOptimisticPatch: (patch) => setOptimisticPatch(patch),
+      clearOptimisticPatch: () => setOptimisticPatch(null),
+    }),
+    [sendCommand, subscribeTelemetry]
+  );
 
   const elapsed = formatDuration(telemetry.printJobTime);
   const remaining = formatDuration(telemetry.printLeftTime);
@@ -60,5 +118,6 @@ export function usePrinter(host = PRINTER_HOST) {
     elapsedSeconds,
     remainingSeconds,
     sendCommand,
+    commandContext,
   };
 }
