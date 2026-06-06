@@ -11,6 +11,7 @@ import { getProgress } from "@/lib/creality/status";
 import type { PrintStatus, PrinterTelemetry } from "@/lib/creality/types";
 import { Field, FieldLabel } from "../ui/field";
 import { Duration } from "../ui/duration";
+import { formatFileName } from "@/lib/fs";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -39,13 +40,11 @@ const statusVariant: Record<
 export function StatusCard({
   status,
   telemetry,
-  elapsed,
-  remaining,
   elapsedSeconds,
   remainingSeconds,
 }: StatusCardProps) {
   const progress = getProgress(telemetry) ?? 0;
-  const filename = telemetry.printFileName?.trim() || "No active print";
+  const filename = formatFileName(telemetry.printFileName) || "No active print";
 
   return (
     <Card>
