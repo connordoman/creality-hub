@@ -149,7 +149,7 @@ export function StatusCard({
         <CardFooter className="flex-col items-start gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>Started {isHydrated ? formatDateTime(printStartTime) : "--"}</p>
           <p>
-            Expected completion{" "}
+            Finishes{" "}
             {isHydrated ? formatDateTime(expectedCompletionTime) : "--"}
           </p>
         </CardFooter>
