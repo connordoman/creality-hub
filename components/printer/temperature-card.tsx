@@ -1,18 +1,29 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useHeaterPhases } from "@/hooks/use-heater-phases";
 import { formatTemperature } from "@/lib/temperature";
-import type { PrinterTelemetry } from "@/lib/creality/types";
+import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
+
+export type { HeaterPhase };
 
 interface TempBlockProps {
   label: string;
   current: number | undefined;
   target: number | undefined;
+  phase: HeaterPhase;
 }
 
-function TempBlock({ label, current, target }: TempBlockProps) {
+export function TempBlock({ label, current, target, phase }: TempBlockProps) {
   return (
-    <div className="rounded-none border border-border/60 bg-muted/20 p-3">
+    <div
+      data-phase={phase}
+      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3"
+    >
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-medium">{formatTemperature(current)}</p>
+      <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
+        {formatTemperature(current)}
+      </p>
       <p className="text-xs text-muted-foreground">
         {formatTemperature(target, 0)}
       </p>
@@ -25,6 +36,8 @@ interface TemperatureCardProps {
 }
 
 export function TemperatureCard({ telemetry }: TemperatureCardProps) {
+  const { data: phases } = useHeaterPhases();
+
   return (
     <Card>
       <CardHeader>
@@ -35,16 +48,19 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
           label="Nozzle"
           current={telemetry.nozzleTemp}
           target={telemetry.targetNozzleTemp}
+          phase={phases.nozzle}
         />
         <TempBlock
           label="Bed"
           current={telemetry.bedTemp0}
           target={telemetry.targetBedTemp0}
+          phase={phases.bed}
         />
         <TempBlock
           label="Chamber"
           current={telemetry.boxTemp}
           target={telemetry.targetBoxTemp}
+          phase="static"
         />
       </CardContent>
     </Card>

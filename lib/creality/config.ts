@@ -12,6 +12,7 @@ export const RETRY_MULTIPLIER = 1.8;
 
 export const GET_PRINTER_PARA_INTERVAL_MS = 5_000;
 export const GET_PRINT_OBJECTS_INTERVAL_MS = 2_000;
+export const HEATER_POLL_INTERVAL_MS = 2_000;
 
 export function wsUrl(host = PRINTER_HOST): string {
   return `ws://${host}:${WS_PORT}`;

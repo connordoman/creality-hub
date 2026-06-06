@@ -16,6 +16,34 @@ export type PrinterCommand =
   | "light-on"
   | "light-off";
 
+export type HeaterPhase = "heating" | "cooling" | "static";
+
+export interface HeaterReading {
+  temperature: number | null;
+  target: number | null;
+  power: number | null;
+}
+
+export interface HeaterPhases {
+  nozzle: HeaterPhase;
+  bed: HeaterPhase;
+}
+
+export interface MoonrakerHeaterObject {
+  temperature?: number;
+  target?: number;
+  power?: number;
+}
+
+export interface MoonrakerHeaterQueryResponse {
+  result?: {
+    status?: {
+      extruder?: MoonrakerHeaterObject;
+      heater_bed?: MoonrakerHeaterObject;
+    };
+  };
+}
+
 export interface PrinterError {
   errcode?: number;
   key?: number;

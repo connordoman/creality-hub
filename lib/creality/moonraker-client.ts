@@ -1,4 +1,9 @@
+import { deriveHeaterPhases } from "./heater-phase";
 import type {
+  HeaterPhases,
+  HeaterReading,
+  MoonrakerHeaterObject,
+  MoonrakerHeaterQueryResponse,
   MoonrakerHistoryJob,
   MoonrakerHistoryResponse,
   PrintHistoryJob,
@@ -93,4 +98,31 @@ export async function fetchPrintHistory(
 ): Promise<PrintHistoryJob[]> {
   const page = await fetchPrintHistoryPage({ limit, start: 0 });
   return page.jobs;
+}
+
+function normalizeHeaterReading(
+  heater?: MoonrakerHeaterObject,
+): HeaterReading {
+  return {
+    temperature:
+      typeof heater?.temperature === "number" ? heater.temperature : null,
+    target: typeof heater?.target === "number" ? heater.target : null,
+    power: typeof heater?.power === "number" ? heater.power : null,
+  };
+}
+
+export async function fetchHeaterPhases(): Promise<HeaterPhases> {
+  const response = await fetch("/api/printer/heaters");
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch heater state (${response.status})`);
+  }
+
+  const data = (await response.json()) as MoonrakerHeaterQueryResponse;
+  const status = data.result?.status;
+
+  return deriveHeaterPhases({
+    nozzle: normalizeHeaterReading(status?.extruder),
+    bed: normalizeHeaterReading(status?.heater_bed),
+  });
 }
