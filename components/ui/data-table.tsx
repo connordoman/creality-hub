@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -53,6 +54,8 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   fillEmptyRows = false,
 }: DataTableProps<TData, TValue>) {
+  const isHydrated = useIsHydrated();
+
   const table = useReactTable({
     data,
     columns,
@@ -72,6 +75,8 @@ export function DataTable<TData, TValue>({
   const to = Math.min((pageIndex + 1) * pageSize, totalCount);
   const canPreviousPage = pageIndex > 0;
   const canNextPage = pageCount > 0 && pageIndex + 1 < pageCount;
+  const prevDisabled = !isHydrated || !canPreviousPage;
+  const nextDisabled = !isHydrated || !canNextPage;
   const emptyRows = fillEmptyRows
     ? Math.max(pageSize - table.getRowModel().rows.length, 0)
     : 0;
@@ -196,7 +201,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon-sm"
                 onClick={() => setPageIndex(0)}
-                disabled={!canPreviousPage}
+                disabled={prevDisabled}
               >
                 <ChevronsLeftIcon />
               </Button>
@@ -204,7 +209,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon-sm"
                 onClick={() => setPageIndex(pageIndex - 1)}
-                disabled={!canPreviousPage}
+                disabled={prevDisabled}
               >
                 <ChevronLeftIcon />
               </Button>
@@ -212,7 +217,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon-sm"
                 onClick={() => setPageIndex(pageIndex + 1)}
-                disabled={!canNextPage}
+                disabled={nextDisabled}
               >
                 <ChevronRightIcon />
               </Button>
@@ -220,7 +225,7 @@ export function DataTable<TData, TValue>({
                 variant="outline"
                 size="icon-sm"
                 onClick={() => setPageIndex(pageCount - 1)}
-                disabled={!canNextPage}
+                disabled={nextDisabled}
               >
                 <ChevronsRightIcon />
               </Button>

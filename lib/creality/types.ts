@@ -88,6 +88,19 @@ export interface PrintHistoryJob {
   filamentUsedG: number | null;
 }
 
+export interface PrintFileMetadata {
+  /** Total filament length for the job, in millimeters. */
+  filamentTotalMm: number | null;
+  /** Total filament weight for the job, in grams. */
+  filamentTotalG: number | null;
+  /** Slicer-estimated print duration, in seconds. */
+  estimatedTimeSeconds: number | null;
+}
+
+export interface MoonrakerMetadataResponse {
+  result?: Record<string, unknown>;
+}
+
 export interface MoonrakerHistoryResponse {
   result?: {
     jobs?: MoonrakerHistoryJob[];

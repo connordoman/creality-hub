@@ -6,6 +6,8 @@ import type {
   MoonrakerHeaterQueryResponse,
   MoonrakerHistoryJob,
   MoonrakerHistoryResponse,
+  MoonrakerMetadataResponse,
+  PrintFileMetadata,
   PrintHistoryJob,
 } from "./types";
 
@@ -109,6 +111,41 @@ function normalizeHeaterReading(
     target: typeof heater?.target === "number" ? heater.target : null,
     power: typeof heater?.power === "number" ? heater.power : null,
   };
+}
+
+function normalizePrintMetadata(
+  metadata: Record<string, unknown> | undefined,
+): PrintFileMetadata {
+  return {
+    filamentTotalMm: readMetadataNumber(metadata, [
+      "filament_total",
+      "filament_used_total",
+    ]),
+    filamentTotalG: readMetadataNumber(metadata, [
+      "filament_weight_total",
+      "filament_weight",
+      "filament_total_weight",
+    ]),
+    estimatedTimeSeconds: readMetadataNumber(metadata, ["estimated_time"]),
+  };
+}
+
+export async function fetchPrintMetadata(
+  filename: string,
+): Promise<PrintFileMetadata | null> {
+  const params = new URLSearchParams({ filename });
+  const response = await fetch(`/api/printer/metadata?${params.toString()}`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch print metadata (${response.status})`);
+  }
+
+  const data = (await response.json()) as MoonrakerMetadataResponse;
+  return normalizePrintMetadata(data.result);
 }
 
 export async function fetchHeaterPhases(): Promise<HeaterPhases> {

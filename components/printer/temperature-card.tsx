@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useHeaterPhases } from "@/hooks/use-heater-phases";
 import { formatTemperature } from "@/lib/temperature";
 import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
+import { ThermometerIcon } from "lucide-react";
 
 export type { HeaterPhase };
 
@@ -41,7 +42,10 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Temperatures</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <ThermometerIcon className="size-4" />
+          Temperatures
+        </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-3">
         <TempBlock

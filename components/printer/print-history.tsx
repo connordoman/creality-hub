@@ -15,7 +15,7 @@ import {
   usePrintHistory,
   type PrintHistoryPagination,
 } from "@/hooks/use-print-history";
-import { RefreshCw } from "lucide-react";
+import { HistoryIcon, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { printHistoryColumns } from "./print-history-columns";
 import { Spinner } from "../ui/spinner";
@@ -36,7 +36,10 @@ export function PrintHistory() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle>Print History</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <HistoryIcon className="size-4" />
+          Print History
+        </CardTitle>
         <CardDescription>
           {isLoading ? (
             <Spinner />

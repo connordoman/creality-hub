@@ -38,6 +38,7 @@ export default function RootLayout({
         geistMono.variable,
         ibmPlexSans.variable
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

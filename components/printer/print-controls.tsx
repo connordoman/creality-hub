@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import type { PrintStatus, PrinterCommand } from "@/lib/creality/types";
-import { Pause, Play, Square } from "lucide-react";
+import { Pause, Play, SlidersVerticalIcon, Square } from "lucide-react";
 
 interface PrintControlsProps {
   status: PrintStatus;
@@ -11,6 +12,7 @@ interface PrintControlsProps {
 }
 
 export function PrintControls({ status, onCommand }: PrintControlsProps) {
+  const isHydrated = useIsHydrated();
   const canPause = status === "printing";
   const canResume = status === "paused";
   const canStop =
@@ -19,12 +21,15 @@ export function PrintControls({ status, onCommand }: PrintControlsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Print Controls</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <SlidersVerticalIcon className="size-4" />
+          Print Controls
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          disabled={!canPause}
+          disabled={!isHydrated || !canPause}
           className="flex-1"
           onClick={() => onCommand("pause")}
         >
@@ -33,7 +38,7 @@ export function PrintControls({ status, onCommand }: PrintControlsProps) {
         </Button>
         <Button
           variant="outline"
-          disabled={!canResume}
+          disabled={!isHydrated || !canResume}
           className="flex-1"
           onClick={() => onCommand("resume")}
         >
@@ -42,7 +47,7 @@ export function PrintControls({ status, onCommand }: PrintControlsProps) {
         </Button>
         <Button
           variant="destructive"
-          disabled={!canStop}
+          disabled={!isHydrated || !canStop}
           className="flex-1"
           onClick={() => onCommand("stop")}
         >
