@@ -16,8 +16,6 @@ import { formatFileName } from "@/lib/fs";
 interface StatusCardProps {
   status: PrintStatus;
   telemetry: PrinterTelemetry;
-  elapsed: string;
-  remaining: string;
   elapsedSeconds: number;
   remainingSeconds: number;
 }
@@ -46,8 +44,10 @@ export function StatusCard({
   const progress = getProgress(telemetry) ?? 0;
   const filename = formatFileName(telemetry.printFileName) || "No active print";
 
+  const isPrinting = status === "printing";
+
   return (
-    <Card>
+    <Card className="flex-1">
       <CardHeader>
         <CardTitle>Print Status</CardTitle>
         <CardDescription>{filename}</CardDescription>
@@ -69,15 +69,17 @@ export function StatusCard({
           <div>
             <p className="text-muted-foreground">Elapsed</p>
             <Duration
-              duration={elapsedSeconds}
+              duration={isPrinting ? elapsedSeconds : 0}
               className="font-medium text-xl"
+              realTime={isPrinting}
             />
           </div>
           <div>
             <p className="text-muted-foreground">Remaining</p>
             <Duration
-              duration={remainingSeconds}
+              duration={isPrinting ? remainingSeconds : 0}
               className="font-medium text-xl"
+              realTime={isPrinting}
               countDown
             />
           </div>

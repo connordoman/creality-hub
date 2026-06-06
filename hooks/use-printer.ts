@@ -22,9 +22,12 @@ export function usePrinter(host = PRINTER_HOST) {
     const unsubscribeState = client.onStateChange(setTelemetry);
     const unsubscribeConnection = client.onConnectionChange(setIsConnected);
 
-    client.start();
-    setTelemetry(client.getTelemetry());
-    setIsConnected(client.isConnected());
+    const init = async () => {
+      client.start();
+      setTelemetry(client.getTelemetry());
+      setIsConnected(client.isConnected());
+    };
+    void init();
 
     return () => {
       unsubscribeState();

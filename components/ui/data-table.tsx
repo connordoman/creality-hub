@@ -160,7 +160,7 @@ export function DataTable<TData, TValue>({
         <p className="text-xs text-muted-foreground">
           {totalCount === 0
             ? "No rows to display"
-            : `Showing ${from}–${to} of ${totalCount}`}
+            : `Showing ${from}\u2013${to} of ${totalCount}`}
         </p>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">

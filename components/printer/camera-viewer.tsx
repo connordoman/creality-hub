@@ -2,31 +2,25 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CrealityWebRTCClient } from "@/lib/creality/webrtc-client";
-import { Camera, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { AlertCircleIcon, CctvIcon, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export function CameraViewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const clientRef = useRef<CrealityWebRTCClient | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
 
-  const connect = useCallback(async () => {
-    setIsConnecting(true);
-    setError(null);
-    setIsLive(false);
-
-    try {
+  const {
+    mutate: connect,
+    isPending: isConnecting,
+    isError,
+    error,
+  } = useMutation({
+    mutationFn: async () => {
       const client = new CrealityWebRTCClient();
       clientRef.current = client;
 
@@ -42,18 +36,18 @@ export function CameraViewer() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => undefined);
       }
-
+    },
+    onSuccess: () => {
       setIsLive(true);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to connect camera";
-      setError(message);
-      await clientRef.current?.disconnect();
-      clientRef.current = null;
-    } finally {
-      setIsConnecting(false);
-    }
-  }, []);
+    },
+    onMutate: () => {
+      setIsLive(false);
+    },
+    onError: (error) => {
+      console.error(error);
+      void clientRef.current?.disconnect();
+    },
+  });
 
   useEffect(() => {
     void connect();
@@ -65,13 +59,12 @@ export function CameraViewer() {
   }, [connect]);
 
   return (
-    <Card className="h-full">
+    <Card className="">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Camera className="size-4" />
+          <CctvIcon className="size-4" />
           Chamber Camera
         </CardTitle>
-        <CardDescription>WebRTC stream from port 8000</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="relative aspect-video overflow-hidden border border-border/60 bg-black">
@@ -92,10 +85,13 @@ export function CameraViewer() {
           ) : null}
         </div>
 
-        {error ? (
+        {isError ? (
           <Alert variant="destructive">
+            <AlertCircleIcon />
             <AlertTitle>Camera error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              {error?.message || "Failed to connect camera"}
+            </AlertDescription>
           </Alert>
         ) : null}
 

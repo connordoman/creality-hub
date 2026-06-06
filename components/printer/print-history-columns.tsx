@@ -1,9 +1,10 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { formatDuration, formatFilamentUsed } from "@/lib/creality/status";
+import { formatFilamentUsed } from "@/lib/creality/status";
 import type { PrintHistoryJob } from "@/lib/creality/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Duration } from "../ui/duration";
 
 function formatTimestamp(timestamp: number | null): string {
   if (timestamp === null || !Number.isFinite(timestamp)) {
@@ -59,12 +60,20 @@ export const printHistoryColumns: ColumnDef<PrintHistoryJob>[] = [
   {
     accessorKey: "durationSeconds",
     header: "Duration",
-    cell: ({ row }) => formatDuration(row.getValue("durationSeconds")),
+    cell: ({ row }) => (
+      <Duration
+        duration={row.getValue("durationSeconds") ?? 0}
+        realTime={false}
+      />
+    ),
   },
   {
     id: "filamentUsed",
     header: "Filament",
     cell: ({ row }) =>
-      formatFilamentUsed(row.original.filamentUsedMm, row.original.filamentUsedG),
+      formatFilamentUsed(
+        row.original.filamentUsedMm,
+        row.original.filamentUsedG
+      ),
   },
 ];

@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -17,6 +18,7 @@ import {
 import { RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { printHistoryColumns } from "./print-history-columns";
+import { Spinner } from "../ui/spinner";
 
 export function PrintHistory() {
   const [pagination, setPagination] = useState<PrintHistoryPagination>({
@@ -24,48 +26,54 @@ export function PrintHistory() {
     pageSize: 10,
   });
 
-  const { jobs, totalCount, isLoading, error, refresh } =
-    usePrintHistory(pagination);
+  const { data, isLoading, error, refetch } = usePrintHistory(pagination);
 
   const pageCount = useMemo(
-    () => Math.ceil(totalCount / pagination.pageSize),
-    [totalCount, pagination.pageSize]
+    () => Math.ceil((data?.totalCount ?? 0) / pagination.pageSize),
+    [data?.totalCount, pagination.pageSize]
   );
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle>Print History</CardTitle>
-          <CardDescription>
-            Paginated job history from Moonraker
-            {totalCount > 0 ? ` · ${totalCount} total jobs` : ""}
-          </CardDescription>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void refresh()}
-          disabled={isLoading}
-        >
-          <RefreshCw data-icon="inline-start" />
-          Refresh
-        </Button>
+        <CardTitle>Print History</CardTitle>
+        <CardDescription>
+          {isLoading ? (
+            <Spinner />
+          ) : (data?.totalCount ?? 0) > 0 ? (
+            `${data?.totalCount} total print${
+              data?.totalCount === 1 ? "" : "s"
+            }`
+          ) : (
+            ""
+          )}
+        </CardDescription>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw data-icon="inline-start" />
+            Refresh
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         {error ? (
           <Alert variant="destructive" className="mb-4">
             <AlertTitle>History unavailable</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{error?.message}</AlertDescription>
           </Alert>
         ) : null}
 
         <DataTable
           fillEmptyRows
           columns={printHistoryColumns}
-          data={jobs}
+          data={data?.jobs ?? []}
           pageCount={pageCount}
-          totalCount={totalCount}
+          totalCount={data?.totalCount ?? 0}
           pagination={pagination}
           onPaginationChange={(next) =>
             setPagination({

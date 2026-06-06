@@ -15,8 +15,6 @@ export function Dashboard() {
     telemetry,
     status,
     isConnected,
-    elapsed,
-    remaining,
     elapsedSeconds,
     remainingSeconds,
     sendCommand,
@@ -36,18 +34,19 @@ export function Dashboard() {
         <ConnectionBadge connected={isConnected} />
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+        <div className="row-start-2 md:row-start-auto flex flex-col gap-6">
           <StatusCard
             status={status}
             telemetry={telemetry}
-            elapsed={elapsed}
-            remaining={remaining}
             elapsedSeconds={elapsedSeconds}
             remainingSeconds={remainingSeconds}
           />
           <TemperatureCard telemetry={telemetry} />
           <PrintControls status={status} onCommand={sendCommand} />
+        </div>
+        <div className="row-start-1 md:row-start-auto space-y-6">
+          <CameraViewer />
           <ChamberLight
             telemetry={telemetry}
             onToggle={(enabled) =>
@@ -55,8 +54,6 @@ export function Dashboard() {
             }
           />
         </div>
-
-        <CameraViewer />
       </div>
 
       <PrintHistory />
