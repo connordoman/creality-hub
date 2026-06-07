@@ -47,7 +47,7 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
           Temperatures
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-3">
+      <CardContent className="grid gap-3 grid-cols-3">
         <TempBlock
           label="Nozzle"
           current={telemetry.nozzleTemp}

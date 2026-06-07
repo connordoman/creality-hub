@@ -34,14 +34,14 @@ export function Dashboard() {
 
   const chamberLightMutation = usePrinterCommandMutation(
     commandContext,
-    chamberLightCommand,
+    chamberLightCommand
   );
   const chamberLightOn = getChamberLightDisplayState(
     telemetry,
     getPrinterCommandPendingValue(
       chamberLightMutation.isPending,
-      chamberLightMutation.variables,
-    ),
+      chamberLightMutation.variables
+    )
   );
 
   if (isLoading) {
@@ -66,18 +66,18 @@ export function Dashboard() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex gap-3 flex-row items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight leading-none mb-1">
             Creality K1C Hub
           </h1>
           <p className="text-sm text-muted-foreground">
             Connected to {printerHost}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <PrinterSettingsDialog />
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
           <ConnectionBadge connected={isConnected} />
+          <PrinterSettingsDialog />
         </div>
       </header>
 

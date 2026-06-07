@@ -19,6 +19,7 @@ import { Spinner } from "../ui/spinner";
 export function CameraViewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const clientRef = useRef<CrealityWebRTCClient | null>(null);
+  const connectedRef = useRef(false);
   const [isLive, setIsLive] = useState(false);
 
   const {
@@ -49,14 +50,18 @@ export function CameraViewer() {
     },
     onMutate: () => {
       setIsLive(false);
+      connectedRef.current = true;
     },
     onError: (error) => {
       console.error(error);
       void clientRef.current?.disconnect();
+      connectedRef.current = false;
     },
   });
 
   useEffect(() => {
+    if (connectedRef.current) return;
+
     void connect();
 
     return () => {
