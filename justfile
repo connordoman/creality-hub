@@ -10,6 +10,10 @@ tag := "latest"
 default:
     @just --list
 
+# Regenerate PWA icons from scripts/assets/creality-logo.png
+icons:
+    ./scripts/generate-pwa-icons.sh
+
 # Ensure Docker Buildx is ready (run once on a new machine)
 setup:
     docker buildx inspect --bootstrap
