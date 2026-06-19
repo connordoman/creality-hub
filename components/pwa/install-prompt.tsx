@@ -17,9 +17,9 @@ export function InstallPrompt() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsIOS(
-      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-        !("MSStream" in window),
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window)
     );
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
 
@@ -33,7 +33,7 @@ export function InstallPrompt() {
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        handleBeforeInstallPrompt,
+        handleBeforeInstallPrompt
       );
     };
   }, []);
@@ -67,8 +67,8 @@ export function InstallPrompt() {
           <p className="font-medium">Install Creality Hub</p>
           {isIOS ? (
             <p className="text-sm text-muted-foreground">
-              Tap <Share className="inline size-3.5 align-text-bottom" /> Share,
-              then &ldquo;Add to Home Screen&rdquo; to install this app.
+              Tap <Share className="inline size-3 mr-1" /> Share, then
+              &ldquo;Add to Home Screen&rdquo; to install this app.
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">

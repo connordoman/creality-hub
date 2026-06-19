@@ -137,17 +137,19 @@ export function StatusCard({
           <PrinterIcon className="size-4" />
           Print Status
         </CardTitle>
-        <CardDescription>{filename}</CardDescription>
+        <CardDescription className="break-all leading-none">
+          {filename}
+        </CardDescription>
         {isPrinting ? (
           <CardAction>
             <p className="font-medium text-right">
               <span className="flex items-center gap-2.5">
-                <span>
+                <span className="whitespace-nowrap">
                   <RulerIcon className="size-3 inline-block mr-1 mb-0.5" />
                   {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
                   {expectedLength?.unit ?? "m"}
                 </span>
-                <span>
+                <span className="whitespace-nowrap">
                   <WeightIcon className="size-3 inline-block mr-1 mb-0.5" />
                   {expectedWeight?.value?.toFixed(1)} {expectedWeight?.unit}
                 </span>
@@ -195,7 +197,7 @@ export function StatusCard({
         </div>
       </CardContent>
 
-      <CardFooter className="flex-col items-start gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <CardFooter className=" gap-1 text-xs text-muted-foreground flex-row items-center justify-between">
         {showScheduleFooter ? (
           <>
             <p>
