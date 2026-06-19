@@ -48,6 +48,8 @@ export interface CrealityWebRTCOptions {
 
 export class CrealityWebRTCClient {
   private pc: RTCPeerConnection | null = null;
+  private rejectPending: ((error: Error) => void) | null = null;
+  private timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   async connect(options: CrealityWebRTCOptions = {}): Promise<MediaStream> {
     await this.disconnect();
@@ -57,18 +59,35 @@ export class CrealityWebRTCClient {
     });
     this.pc = pc;
 
+    let settled = false;
+
     const streamPromise = new Promise<MediaStream>((resolve, reject) => {
+      const settle = (handler: () => void) => {
+        if (settled) return;
+        settled = true;
+        this.rejectPending = null;
+        if (this.timeoutId) {
+          clearTimeout(this.timeoutId);
+          this.timeoutId = null;
+        }
+        handler();
+      };
+
+      this.rejectPending = (error) => {
+        settle(() => reject(error));
+      };
+
       pc.ontrack = (event) => {
         const [stream] = event.streams;
         if (stream) {
           options.onStream?.(stream);
-          resolve(stream);
+          settle(() => resolve(stream));
         }
       };
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "failed") {
-          reject(new Error("WebRTC connection failed"));
+          settle(() => reject(new Error("WebRTC connection failed")));
         }
       };
     });
@@ -110,11 +129,14 @@ export class CrealityWebRTCClient {
     try {
       return await Promise.race([
         streamPromise,
-        new Promise<MediaStream>((_, reject) =>
-          setTimeout(() => reject(new Error("Timed out waiting for camera stream")), 10_000),
-        ),
+        new Promise<MediaStream>((_, reject) => {
+          this.timeoutId = setTimeout(() => {
+            reject(new Error("Timed out waiting for camera stream"));
+          }, 10_000);
+        }),
       ]);
     } catch (error) {
+      await this.disconnect();
       const message = error instanceof Error ? error.message : "WebRTC connection failed";
       options.onError?.(new Error(message));
       throw error;
@@ -122,10 +144,23 @@ export class CrealityWebRTCClient {
   }
 
   async disconnect(): Promise<void> {
-    if (!this.pc) return;
+    if (this.rejectPending) {
+      this.rejectPending(new Error("Connection aborted"));
+      this.rejectPending = null;
+    }
 
-    this.pc.getReceivers().forEach((receiver) => receiver.track?.stop());
-    this.pc.close();
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+
+    const pc = this.pc;
     this.pc = null;
+    if (!pc) return;
+
+    pc.ontrack = null;
+    pc.onconnectionstatechange = null;
+    pc.getReceivers().forEach((receiver) => receiver.track?.stop());
+    pc.close();
   }
 }

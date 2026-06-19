@@ -69,7 +69,7 @@ export function Dashboard() {
       <header className="flex gap-3 flex-row items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight leading-none mb-1">
-            Creality K1C Hub
+            Print Zone
           </h1>
           <p className="text-sm text-muted-foreground">
             Connected to {printerHost}

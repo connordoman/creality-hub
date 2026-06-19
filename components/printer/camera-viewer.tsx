@@ -11,64 +11,81 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CrealityWebRTCClient } from "@/lib/creality/webrtc-client";
-import { useMutation } from "@tanstack/react-query";
 import { AlertCircleIcon, CctvIcon, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "../ui/spinner";
 
 export function CameraViewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const clientRef = useRef<CrealityWebRTCClient | null>(null);
-  const connectedRef = useRef(false);
+  const generationRef = useRef(0);
+  const [isConnecting, setIsConnecting] = useState(true);
   const [isLive, setIsLive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    mutate: connect,
-    isPending: isConnecting,
-    isError,
-    error,
-  } = useMutation({
-    mutationFn: async () => {
-      const client = new CrealityWebRTCClient();
-      clientRef.current = client;
+  const runConnection = useCallback(async (generation: number) => {
+    await clientRef.current?.disconnect();
+    clientRef.current = null;
 
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    const client = new CrealityWebRTCClient();
+    clientRef.current = client;
+
+    try {
       const stream = await client.connect({
         onStream: (mediaStream) => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = mediaStream;
-          }
+          if (generation !== generationRef.current || !videoRef.current) return;
+          videoRef.current.srcObject = mediaStream;
         },
       });
+
+      if (generation !== generationRef.current) return;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => undefined);
       }
-    },
-    onSuccess: () => {
+
       setIsLive(true);
-    },
-    onMutate: () => {
-      setIsLive(false);
-      connectedRef.current = true;
-    },
-    onError: (error) => {
-      console.error(error);
-      void clientRef.current?.disconnect();
-      connectedRef.current = false;
-    },
-  });
+    } catch (err) {
+      if (generation !== generationRef.current) return;
+
+      const message =
+        err instanceof Error ? err.message : "Failed to connect camera";
+      if (message === "Connection aborted") return;
+
+      console.error(err);
+      await clientRef.current?.disconnect();
+      clientRef.current = null;
+      setError(message);
+    } finally {
+      if (generation === generationRef.current) {
+        setIsConnecting(false);
+      }
+    }
+  }, []);
+
+  const reconnect = useCallback(() => {
+    const generation = ++generationRef.current;
+    setIsConnecting(true);
+    setIsLive(false);
+    setError(null);
+    void runConnection(generation);
+  }, [runConnection]);
 
   useEffect(() => {
-    if (connectedRef.current) return;
-
-    void connect();
+    const generation = ++generationRef.current;
+    void runConnection(generation);
 
     return () => {
+      generationRef.current += 1;
       void clientRef.current?.disconnect();
       clientRef.current = null;
     };
-  }, [connect]);
+  }, [runConnection]);
 
   return (
     <Card className="">
@@ -82,7 +99,7 @@ export function CameraViewer() {
             variant="outline"
             size="sm"
             disabled={isConnecting}
-            onClick={() => void connect()}
+            onClick={reconnect}
           >
             {isConnecting ? (
               <Spinner data-icon="inline-start" />
@@ -112,13 +129,11 @@ export function CameraViewer() {
           ) : null}
         </div>
 
-        {isError ? (
+        {error ? (
           <Alert variant="destructive">
             <AlertCircleIcon />
             <AlertTitle>Camera error</AlertTitle>
-            <AlertDescription>
-              {error?.message || "Failed to connect camera"}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
       </CardContent>
