@@ -21,7 +21,7 @@ import { TemperatureCard } from "./temperature-card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function Dashboard() {
-  const { printerHost, isLoading, error } = usePrinterSettings();
+  const { printerHost, printerName, isLoading, error } = usePrinterSettings();
   const {
     telemetry,
     status,
@@ -69,7 +69,7 @@ export function Dashboard() {
       <header className="flex gap-3 flex-row items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight leading-none mb-1">
-            Print Zone
+            {printerName}
           </h1>
           <p className="text-sm text-muted-foreground">
             Connected to {printerHost}

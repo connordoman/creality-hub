@@ -13,19 +13,24 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { usePrinterSettings } from "@/context/printer-settings";
-import { isValidPrinterHost } from "@/lib/settings/validation";
+import {
+  isValidPrinterHost,
+  isValidPrinterName,
+} from "@/lib/settings/validation";
 import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 
 export function PrinterSettingsDialog() {
   const {
     printerHost,
+    printerName,
     isSaving,
     saveError,
-    updatePrinterHost,
+    updateSettings,
   } = usePrinterSettings();
   const [open, setOpen] = useState(false);
   const [draftHost, setDraftHost] = useState("");
+  const [draftName, setDraftName] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -33,11 +38,17 @@ export function PrinterSettingsDialog() {
 
     if (nextOpen) {
       setDraftHost(printerHost ?? "");
+      setDraftName(printerName ?? "");
       setValidationError(null);
     }
   };
 
   const handleSave = async () => {
+    if (!isValidPrinterName(draftName)) {
+      setValidationError("Enter a printer name (1-100 characters)");
+      return;
+    }
+
     if (!isValidPrinterHost(draftHost)) {
       setValidationError("Enter a valid IPv4 address or hostname");
       return;
@@ -46,7 +57,10 @@ export function PrinterSettingsDialog() {
     setValidationError(null);
 
     try {
-      await updatePrinterHost(draftHost.trim());
+      await updateSettings({
+        printerHost: draftHost.trim(),
+        printerName: draftName.trim(),
+      });
       setOpen(false);
     } catch {
       // saveError is surfaced below
@@ -68,12 +82,27 @@ export function PrinterSettingsDialog() {
         <DialogHeader>
           <DialogTitle>Printer settings</DialogTitle>
           <DialogDescription>
-            Saved on the server and shared across all devices. Update this when
-            the printer gets a new IP address.
+            Saved on the server and shared across all devices. Update the name
+            or IP address when your printer changes.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          <Field>
+            <FieldLabel htmlFor="printer-name">Printer name</FieldLabel>
+            <input
+              id="printer-name"
+              name="printer-name"
+              type="text"
+              autoComplete="off"
+              value={draftName}
+              disabled={isSaving}
+              placeholder="Creality K1C"
+              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:opacity-50"
+              onChange={(event) => setDraftName(event.target.value)}
+            />
+          </Field>
+
           <Field>
             <FieldLabel htmlFor="printer-host">Printer IP or hostname</FieldLabel>
             <input

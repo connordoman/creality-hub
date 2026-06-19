@@ -3,7 +3,12 @@ import {
   readSettings,
   writeSettings,
 } from "@/lib/settings/server";
-import { isValidPrinterHost, normalizePrinterHost } from "@/lib/settings/validation";
+import {
+  isValidPrinterHost,
+  isValidPrinterName,
+  normalizePrinterHost,
+  normalizePrinterName,
+} from "@/lib/settings/validation";
 import type { UpdateAppSettingsRequest } from "@/lib/settings/types";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -27,17 +32,37 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const printerHost = normalizePrinterHost(body.printerHost ?? "");
+  if (body.printerHost !== undefined) {
+    const printerHost = normalizePrinterHost(body.printerHost);
 
-  if (!isValidPrinterHost(printerHost)) {
+    if (!isValidPrinterHost(printerHost)) {
+      return NextResponse.json(
+        { error: "Enter a valid IPv4 address or hostname" },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (body.printerName !== undefined) {
+    const printerName = normalizePrinterName(body.printerName);
+
+    if (!isValidPrinterName(printerName)) {
+      return NextResponse.json(
+        { error: "Enter a printer name (1-100 characters)" },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (body.printerHost === undefined && body.printerName === undefined) {
     return NextResponse.json(
-      { error: "Enter a valid IPv4 address or hostname" },
+      { error: "No settings to update" },
       { status: 400 },
     );
   }
 
   try {
-    const settings = await writeSettings({ printerHost });
+    const settings = await writeSettings(body);
     return NextResponse.json(settings);
   } catch (error) {
     const message =

@@ -4,7 +4,10 @@ import {
   fetchAppSettings,
   updateAppSettings,
 } from "@/lib/settings/client";
-import type { AppSettings } from "@/lib/settings/types";
+import type {
+  AppSettings,
+  UpdateAppSettingsRequest,
+} from "@/lib/settings/types";
 import {
   useMutation,
   useQuery,
@@ -20,11 +23,12 @@ import {
 
 interface PrinterSettingsContextValue {
   printerHost: string | undefined;
+  printerName: string | undefined;
   isLoading: boolean;
   isSaving: boolean;
   error: Error | null;
   saveError: Error | null;
-  updatePrinterHost: (printerHost: string) => Promise<void>;
+  updateSettings: (updates: UpdateAppSettingsRequest) => Promise<void>;
 }
 
 const PrinterSettingsContext = createContext<
@@ -47,9 +51,9 @@ export function PrinterSettingsProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const updatePrinterHost = useCallback(
-    async (printerHost: string) => {
-      await saveMutation.mutateAsync({ printerHost });
+  const updateSettings = useCallback(
+    async (updates: UpdateAppSettingsRequest) => {
+      await saveMutation.mutateAsync(updates);
     },
     [saveMutation],
   );
@@ -57,19 +61,21 @@ export function PrinterSettingsProvider({ children }: { children: ReactNode }) {
   const value = useMemo<PrinterSettingsContextValue>(
     () => ({
       printerHost: settingsQuery.data?.printerHost,
+      printerName: settingsQuery.data?.printerName,
       isLoading: settingsQuery.isLoading,
       isSaving: saveMutation.isPending,
       error: settingsQuery.error,
       saveError: saveMutation.error,
-      updatePrinterHost,
+      updateSettings,
     }),
     [
       settingsQuery.data?.printerHost,
+      settingsQuery.data?.printerName,
       settingsQuery.isLoading,
       settingsQuery.error,
       saveMutation.isPending,
       saveMutation.error,
-      updatePrinterHost,
+      updateSettings,
     ],
   );
 

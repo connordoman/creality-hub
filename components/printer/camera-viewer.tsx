@@ -81,9 +81,16 @@ export function CameraViewer() {
     void runConnection(generation);
 
     return () => {
-      generationRef.current += 1;
-      void clientRef.current?.disconnect();
-      clientRef.current = null;
+      try {
+        generationRef.current += 1;
+        void clientRef.current?.disconnect();
+        clientRef.current = null;
+      } catch (err) {
+        console.error(err);
+        setError(
+          err instanceof Error ? err.message : "Failed to disconnect camera"
+        );
+      }
     };
   }, [runConnection]);
 

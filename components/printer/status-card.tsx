@@ -24,9 +24,10 @@ import { Duration } from "../ui/duration";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
-import { PrinterIcon } from "lucide-react";
+import { ClockCheckIcon, ClockFadingIcon, PrinterIcon } from "lucide-react";
 import { formatDuration, formatDateTime } from "@/lib/time";
 import { useMemo } from "react";
+import dayjs from "dayjs";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -57,19 +58,25 @@ export function StatusCard({
   remainingSeconds,
 }: StatusCardProps) {
   const progress = getProgress(telemetry) ?? 0;
+
   const filename = formatFileName(telemetry.printFileName) || "No active print";
+
   const { data: metadata } = usePrintMetadata(
     formatFileName(telemetry.printFileName)
   );
+
   const expectedFilament = formatFilamentUsed(
     metadata?.filamentTotalMm,
     metadata?.filamentTotalG
   );
+
   const isHydrated = useIsHydrated();
+
   const printStartTime = useMemo(
     () => getPrintStartTime(telemetry, metadata, elapsedSeconds, status),
     [telemetry, metadata, elapsedSeconds, status]
   );
+
   const expectedCompletionTime = useMemo(
     () =>
       getExpectedCompletionTime(
@@ -87,6 +94,27 @@ export function StatusCard({
       status,
     ]
   );
+
+  const timeRange = useMemo(() => {
+    if (printStartTime == null) return null;
+    if (expectedCompletionTime == null) return null;
+
+    const start = dayjs(printStartTime * 1000);
+    const end = dayjs(expectedCompletionTime * 1000);
+
+    if (start.isSame(end, "day")) {
+      return {
+        start: start.format("HH:mm"),
+        end: end.format("HH:mm"),
+      };
+    }
+
+    return {
+      start: start.format("MMMM D, HH:mm"),
+      end: end.format("MMMM D, HH:mm"),
+    };
+  }, [printStartTime, expectedCompletionTime]);
+
   const showScheduleFooter =
     Boolean(formatFileName(telemetry.printFileName)) &&
     (isActivePrintStatus(status) ||
@@ -155,12 +183,12 @@ export function StatusCard({
         {showScheduleFooter ? (
           <>
             <p>
-              {"Started "}
-              {isHydrated ? formatDateTime(printStartTime) : "--"}
+              <ClockFadingIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {isHydrated ? timeRange?.start : "\u2014"}
             </p>
             <p>
-              {"Expected finish "}
-              {isHydrated ? formatDateTime(expectedCompletionTime) : "--"}
+              <ClockCheckIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {isHydrated ? `${timeRange?.end}` : "\u2014"}
             </p>
           </>
         ) : null}

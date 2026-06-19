@@ -1,5 +1,17 @@
+export const DEFAULT_PRINTER_NAME = "Creality K1C";
+
 export function normalizePrinterHost(value: string): string {
   return value.trim();
+}
+
+export function normalizePrinterName(value: string): string {
+  return value.trim();
+}
+
+export function isValidPrinterName(name: string): boolean {
+  const normalized = normalizePrinterName(name);
+
+  return normalized.length > 0 && normalized.length <= 100;
 }
 
 export function isValidPrinterHost(host: string): boolean {
