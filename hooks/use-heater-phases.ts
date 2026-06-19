@@ -8,13 +8,19 @@ import { useQuery } from "@tanstack/react-query";
 const DEFAULT_PHASES: HeaterPhases = {
   nozzle: "static",
   bed: "static",
+  raw: {
+    nozzle: undefined,
+    bed: undefined,
+  },
 };
 
 export function useHeaterPhases(pollIntervalMs = HEATER_POLL_INTERVAL_MS) {
   return useQuery({
     queryKey: ["heater-phases"],
     queryFn: async () => {
-      return await fetchHeaterPhases();
+      const data = await fetchHeaterPhases();
+      console.log(JSON.stringify(data, null, 2));
+      return data;
     },
     initialData: DEFAULT_PHASES,
     staleTime: pollIntervalMs,

@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useHeaterPhases } from "@/hooks/use-heater-phases";
 import { formatTemperature } from "@/lib/temperature";
 import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
@@ -67,6 +73,11 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
           phase="static"
         />
       </CardContent>
+      {process.env.NODE_ENV === "development" && (
+        <CardFooter>
+          <pre>{JSON.stringify(phases.raw, null, 2)}</pre>
+        </CardFooter>
+      )}
     </Card>
   );
 }

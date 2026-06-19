@@ -27,6 +27,10 @@ export interface HeaterReading {
 export interface HeaterPhases {
   nozzle: HeaterPhase;
   bed: HeaterPhase;
+  raw?: {
+    nozzle: HeaterReading | undefined;
+    bed: HeaterReading | undefined;
+  };
 }
 
 export interface MoonrakerHeaterObject {

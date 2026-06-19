@@ -13,7 +13,7 @@ import type {
 
 function readMetadataNumber(
   metadata: Record<string, unknown> | undefined,
-  keys: string[],
+  keys: string[]
 ): number | null {
   if (!metadata) return null;
 
@@ -22,7 +22,11 @@ function readMetadataNumber(
     if (typeof value === "number" && Number.isFinite(value)) {
       return value;
     }
-    if (typeof value === "string" && value.trim() !== "" && !Number.isNaN(Number(value))) {
+    if (
+      typeof value === "string" &&
+      value.trim() !== "" &&
+      !Number.isNaN(Number(value))
+    ) {
       return Number(value);
     }
   }
@@ -84,9 +88,7 @@ export async function fetchPrintHistoryPage({
   const data = (await response.json()) as MoonrakerHistoryResponse;
   const jobs = data.result?.jobs ?? [];
   const totalCount =
-    data.result?.total_jobs ??
-    data.result?.count ??
-    jobs.length;
+    data.result?.total_jobs ?? data.result?.count ?? jobs.length;
 
   return {
     jobs: jobs.map(normalizeJob),
@@ -96,15 +98,13 @@ export async function fetchPrintHistoryPage({
 
 /** @deprecated Use fetchPrintHistoryPage for paginated history. */
 export async function fetchPrintHistory(
-  limit = 50,
+  limit = 50
 ): Promise<PrintHistoryJob[]> {
   const page = await fetchPrintHistoryPage({ limit, start: 0 });
   return page.jobs;
 }
 
-function normalizeHeaterReading(
-  heater?: MoonrakerHeaterObject,
-): HeaterReading {
+function normalizeHeaterReading(heater?: MoonrakerHeaterObject): HeaterReading {
   return {
     temperature:
       typeof heater?.temperature === "number" ? heater.temperature : null,
@@ -114,7 +114,7 @@ function normalizeHeaterReading(
 }
 
 function normalizePrintMetadata(
-  metadata: Record<string, unknown> | undefined,
+  metadata: Record<string, unknown> | undefined
 ): PrintFileMetadata {
   return {
     filamentTotalMm: readMetadataNumber(metadata, [
@@ -132,7 +132,7 @@ function normalizePrintMetadata(
 }
 
 export async function fetchPrintMetadata(
-  filename: string,
+  filename: string
 ): Promise<PrintFileMetadata | null> {
   const params = new URLSearchParams({ filename });
   const response = await fetch(`/api/printer/metadata?${params.toString()}`);
@@ -159,8 +159,10 @@ export async function fetchHeaterPhases(): Promise<HeaterPhases> {
   const data = (await response.json()) as MoonrakerHeaterQueryResponse;
   const status = data.result?.status;
 
-  return deriveHeaterPhases({
-    nozzle: normalizeHeaterReading(status?.extruder),
-    bed: normalizeHeaterReading(status?.heater_bed),
-  });
+  const normalizedNozzle = normalizeHeaterReading(status?.extruder);
+  const normalizedBed = normalizeHeaterReading(status?.heater_bed);
+  return {
+    ...deriveHeaterPhases({ nozzle: normalizedNozzle, bed: normalizedBed }),
+    raw: { nozzle: normalizedNozzle, bed: normalizedBed },
+  };
 }

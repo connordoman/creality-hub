@@ -22,8 +22,11 @@ export function deriveHeaterPhase({
   const heaterPower = power ?? 0;
   const delta = target - temperature;
 
-  if (target < HEATER_MIN_TARGET_C) {
-    if (temperature > target + HEATER_HYSTERESIS_C && heaterPower <= HEATER_POWER_THRESHOLD) {
+  if (target < HEATER_MIN_TARGET_C || target === null) {
+    if (
+      temperature > (target ?? 0) + HEATER_HYSTERESIS_C &&
+      heaterPower <= HEATER_POWER_THRESHOLD
+    ) {
       return "cooling";
     }
     return "static";

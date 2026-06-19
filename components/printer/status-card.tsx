@@ -24,7 +24,14 @@ import { Duration } from "../ui/duration";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
-import { ClockCheckIcon, ClockFadingIcon, PrinterIcon } from "lucide-react";
+import {
+  ClockCheckIcon,
+  ClockFadingIcon,
+  PrinterIcon,
+  RulerDimensionLineIcon,
+  RulerIcon,
+  WeightIcon,
+} from "lucide-react";
 import { formatDuration, formatDateTime } from "@/lib/time";
 import { useMemo } from "react";
 import dayjs from "dayjs";
@@ -65,7 +72,7 @@ export function StatusCard({
     formatFileName(telemetry.printFileName)
   );
 
-  const expectedFilament = formatFilamentUsed(
+  const { length: expectedLength, weight: expectedWeight } = formatFilamentUsed(
     metadata?.filamentTotalMm,
     metadata?.filamentTotalG
   );
@@ -134,7 +141,17 @@ export function StatusCard({
         {isPrinting ? (
           <CardAction>
             <p className="font-medium text-right">
-              <span>{expectedFilament}</span>
+              <span className="flex items-center gap-2">
+                <span>
+                  <RulerIcon className="size-3 inline-block mr-1 mb-0.5" />
+                  {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
+                  {expectedLength?.unit ?? "m"}
+                </span>
+                <span>
+                  <WeightIcon className="size-3 inline-block mr-1 mb-0.5" />
+                  {expectedWeight?.value?.toFixed(1)} {expectedWeight?.unit}
+                </span>
+              </span>
               <br />
               <span>
                 {isPrinting

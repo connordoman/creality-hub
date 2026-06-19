@@ -64,10 +64,19 @@ export const printHistoryColumns: ColumnDef<PrintHistoryJob>[] = [
   {
     id: "filamentUsed",
     header: "Filament",
-    cell: ({ row }) =>
-      formatFilamentUsed(
+    cell: ({ row }) => {
+      const { length, weight } = formatFilamentUsed(
         row.original.filamentUsedMm,
         row.original.filamentUsedG
-      ),
+      );
+
+      return (
+        <span>
+          {`${length?.value?.toFixed(2) ?? "\u2014"} ${length?.unit ?? "m"} · ${
+            weight?.value?.toFixed(1) ?? "\u2014"
+          } ${weight?.unit ?? "g"}`}
+        </span>
+      );
+    },
   },
 ];
