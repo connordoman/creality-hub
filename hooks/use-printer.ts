@@ -50,8 +50,21 @@ export function usePrinter(host: string | undefined) {
     clientRef.current = client;
 
     const unsubscribeState = client.onStateChange((telemetry) => {
+      serverTelemetryRef.current = telemetry;
       setServerTelemetry(telemetry);
       notifyTelemetryListeners(telemetry);
+      setOptimisticPatch((current) => {
+        if (!current) {
+          return null;
+        }
+
+        const serverMatchesPatch = Object.entries(current).every(
+          ([key, value]) =>
+            telemetry[key as keyof PrinterTelemetry] === value,
+        );
+
+        return serverMatchesPatch ? null : current;
+      });
     });
     const unsubscribeConnection = client.onConnectionChange(setIsConnected);
 
@@ -74,6 +87,10 @@ export function usePrinter(host: string | undefined) {
       setIsConnected(false);
     };
   }, [host, notifyTelemetryListeners]);
+
+  useEffect(() => {
+    serverTelemetryRef.current = serverTelemetry;
+  }, [serverTelemetry]);
 
   const telemetry = useMemo(
     () => mergeTelemetry(serverTelemetry, optimisticPatch),

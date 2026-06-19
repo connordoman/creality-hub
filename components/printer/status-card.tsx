@@ -141,7 +141,7 @@ export function StatusCard({
         {isPrinting ? (
           <CardAction>
             <p className="font-medium text-right">
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2.5">
                 <span>
                   <RulerIcon className="size-3 inline-block mr-1 mb-0.5" />
                   {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
@@ -152,7 +152,6 @@ export function StatusCard({
                   {expectedWeight?.value?.toFixed(1)} {expectedWeight?.unit}
                 </span>
               </span>
-              <br />
               <span>
                 {isPrinting
                   ? formatDuration(elapsedSeconds + remainingSeconds)

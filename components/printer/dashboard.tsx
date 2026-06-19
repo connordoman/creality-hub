@@ -19,6 +19,7 @@ import { PrinterSettingsDialog } from "./printer-settings-dialog";
 import { StatusCard } from "./status-card";
 import { TemperatureCard } from "./temperature-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PrinterOptions } from "./printer-options";
 
 export function Dashboard() {
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
@@ -31,18 +32,6 @@ export function Dashboard() {
     sendCommand,
     commandContext,
   } = usePrinter(printerHost);
-
-  const chamberLightMutation = usePrinterCommandMutation(
-    commandContext,
-    chamberLightCommand
-  );
-  const chamberLightOn = getChamberLightDisplayState(
-    telemetry,
-    getPrinterCommandPendingValue(
-      chamberLightMutation.isPending,
-      chamberLightMutation.variables
-    )
-  );
 
   if (isLoading) {
     return (
@@ -94,11 +83,10 @@ export function Dashboard() {
         </div>
         <div className="row-start-1 md:row-start-auto space-y-6">
           <CameraViewer />
-          <ChamberLight
-            isOn={chamberLightOn}
-            pending={chamberLightMutation.isPending}
-            disabled={!isConnected}
-            onToggle={(enabled) => chamberLightMutation.mutate(enabled)}
+          <PrinterOptions
+            telemetry={telemetry}
+            commandContext={commandContext}
+            isConnected={isConnected}
           />
         </div>
       </div>

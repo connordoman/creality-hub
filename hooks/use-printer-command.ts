@@ -66,9 +66,6 @@ export function usePrinterCommandMutation<TVariables = void>(
       );
       context.applyOptimisticPatch(patch);
     },
-    onSuccess: () => {
-      context.clearOptimisticPatch();
-    },
     onError: () => {
       context.clearOptimisticPatch();
     },
