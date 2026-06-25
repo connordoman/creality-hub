@@ -15,34 +15,59 @@ import { AlertCircleIcon, CctvIcon, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "../ui/spinner";
 
+interface ActiveCameraConnection {
+  client: CrealityWebRTCClient;
+  controller: AbortController;
+}
+
 export function CameraViewer() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const clientRef = useRef<CrealityWebRTCClient | null>(null);
+  const connectionRef = useRef<ActiveCameraConnection | null>(null);
   const generationRef = useRef(0);
   const [isConnecting, setIsConnecting] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const runConnection = useCallback(async (generation: number) => {
-    await clientRef.current?.disconnect();
-    clientRef.current = null;
+    const previousConnection = connectionRef.current;
+    previousConnection?.controller.abort();
+    await previousConnection?.client.disconnect();
+    if (connectionRef.current === previousConnection) {
+      connectionRef.current = null;
+    }
+
+    if (generation !== generationRef.current) return;
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
 
     const client = new CrealityWebRTCClient();
-    clientRef.current = client;
+    const controller = new AbortController();
+    const connection = { client, controller };
+    connectionRef.current = connection;
 
     try {
       const stream = await client.connect({
+        signal: controller.signal,
         onStream: (mediaStream) => {
-          if (generation !== generationRef.current || !videoRef.current) return;
+          if (
+            generation !== generationRef.current ||
+            connectionRef.current !== connection ||
+            !videoRef.current
+          ) {
+            return;
+          }
           videoRef.current.srcObject = mediaStream;
         },
       });
 
-      if (generation !== generationRef.current) return;
+      if (
+        generation !== generationRef.current ||
+        connectionRef.current !== connection
+      ) {
+        return;
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -58,11 +83,16 @@ export function CameraViewer() {
       if (message === "Connection aborted") return;
 
       console.error(err);
-      await clientRef.current?.disconnect();
-      clientRef.current = null;
+      await client.disconnect();
+      if (connectionRef.current === connection) {
+        connectionRef.current = null;
+      }
       setError(message);
     } finally {
-      if (generation === generationRef.current) {
+      if (
+        generation === generationRef.current &&
+        connectionRef.current === connection
+      ) {
         setIsConnecting(false);
       }
     }
@@ -78,13 +108,18 @@ export function CameraViewer() {
 
   useEffect(() => {
     const generation = ++generationRef.current;
-    void runConnection(generation);
+    const connectTimer = setTimeout(() => {
+      void runConnection(generation);
+    }, 0);
 
     return () => {
       try {
+        clearTimeout(connectTimer);
         generationRef.current += 1;
-        void clientRef.current?.disconnect();
-        clientRef.current = null;
+        const connection = connectionRef.current;
+        connection?.controller.abort();
+        void connection?.client.disconnect();
+        connectionRef.current = null;
       } catch (err) {
         console.error(err);
         setError(
