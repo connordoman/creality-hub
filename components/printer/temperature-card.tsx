@@ -18,13 +18,22 @@ interface TempBlockProps {
   label: string;
   current: number | undefined;
   target: number | undefined;
-  phase: HeaterPhase;
 }
 
-export function TempBlock({ label, current, target, phase }: TempBlockProps) {
+export function TempBlock({ label, current, target }: TempBlockProps) {
+  const delta = Math.abs((current ?? 0) - (target ?? 0));
+  const direction = (current ?? 0) > (target ?? 0) ? -1 : 1;
+
+  let derivedPhase = "static";
+  if (current === undefined || target === undefined) {
+    derivedPhase = "static";
+  } else if (delta > 3) {
+    derivedPhase = direction > 0 ? "heating" : "cooling";
+  }
+
   return (
     <div
-      data-phase={phase}
+      data-phase={derivedPhase}
       className="group/heat rounded-none border border-border/60 bg-muted/20 p-3"
     >
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -43,7 +52,10 @@ interface TemperatureCardProps {
 }
 
 export function TemperatureCard({ telemetry }: TemperatureCardProps) {
-  const { data: phases } = useHeaterPhases();
+  const { data: phases } = useHeaterPhases(
+    undefined,
+    process.env.NODE_ENV === "development"
+  );
 
   return (
     <Card>
@@ -58,19 +70,16 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
           label="Nozzle"
           current={telemetry.nozzleTemp}
           target={telemetry.targetNozzleTemp}
-          phase={phases.nozzle}
         />
         <TempBlock
           label="Bed"
           current={telemetry.bedTemp0}
           target={telemetry.targetBedTemp0}
-          phase={phases.bed}
         />
         <TempBlock
           label="Chamber"
           current={telemetry.boxTemp}
           target={telemetry.targetBoxTemp}
-          phase="static"
         />
       </CardContent>
       {process.env.NODE_ENV === "development" && (

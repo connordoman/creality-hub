@@ -14,7 +14,10 @@ const DEFAULT_PHASES: HeaterPhases = {
   },
 };
 
-export function useHeaterPhases(pollIntervalMs = HEATER_POLL_INTERVAL_MS) {
+export function useHeaterPhases(
+  pollIntervalMs = HEATER_POLL_INTERVAL_MS,
+  enabled = true
+) {
   return useQuery({
     queryKey: ["heater-phases"],
     queryFn: async () => {
@@ -24,5 +27,6 @@ export function useHeaterPhases(pollIntervalMs = HEATER_POLL_INTERVAL_MS) {
     },
     initialData: DEFAULT_PHASES,
     staleTime: pollIntervalMs,
+    enabled,
   });
 }
