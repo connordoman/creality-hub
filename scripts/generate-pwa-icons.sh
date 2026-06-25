@@ -17,19 +17,32 @@ fi
 
 mkdir -p "${OUT_DIR}"
 
+square_icon() {
+  local size="$1"
+  local output="$2"
+  magick "${SOURCE}" -resize "${size}x${size}" -background black -gravity center \
+    -extent "${size}x${size}" "${output}"
+}
+
+maskable_icon() {
+  local safe_zone="$1"
+  local canvas="$2"
+  local output="$3"
+  magick "${SOURCE}" -resize "${safe_zone}x${safe_zone}" -background black -gravity center \
+    -extent "${safe_zone}x${safe_zone}" -background black -gravity center \
+    -extent "${canvas}x${canvas}" "${output}"
+}
+
 for size in 72 96 128 144 152 192 384 512; do
-  magick "${SOURCE}" -resize "${size}x${size}" "${OUT_DIR}/icon-${size}x${size}.png"
+  square_icon "${size}" "${OUT_DIR}/icon-${size}x${size}.png"
 done
 
-# Maskable icons keep the logo inside the 80% safe zone.
-magick "${SOURCE}" -resize 154x154 -background black -gravity center -extent 192x192 \
-  "${OUT_DIR}/icon-maskable-192x192.png"
-magick "${SOURCE}" -resize 410x410 -background black -gravity center -extent 512x512 \
-  "${OUT_DIR}/icon-maskable-512x512.png"
+maskable_icon 154 192 "${OUT_DIR}/icon-maskable-192x192.png"
+maskable_icon 410 512 "${OUT_DIR}/icon-maskable-512x512.png"
 
-magick "${SOURCE}" -resize 180x180 "${ROOT}/public/apple-touch-icon.png"
-magick "${SOURCE}" -resize 32x32 "${ROOT}/public/favicon-32x32.png"
-magick "${SOURCE}" -resize 16x16 "${ROOT}/public/favicon-16x16.png"
+square_icon 180 "${ROOT}/public/apple-touch-icon.png"
+square_icon 32 "${ROOT}/public/favicon-32x32.png"
+square_icon 16 "${ROOT}/public/favicon-16x16.png"
 magick "${ROOT}/public/favicon-16x16.png" "${ROOT}/public/favicon-32x32.png" \
   "${ROOT}/public/favicon.ico"
 
