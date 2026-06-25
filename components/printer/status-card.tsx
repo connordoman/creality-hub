@@ -24,17 +24,12 @@ import { Duration } from "../ui/duration";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
-import {
-  ClockCheckIcon,
-  ClockFadingIcon,
-  PrinterIcon,
-  RulerDimensionLineIcon,
-  RulerIcon,
-  WeightIcon,
-} from "lucide-react";
-import { formatDuration, formatDateTime } from "@/lib/time";
+import { PrinterIcon, RulerIcon, WeightIcon } from "lucide-react";
+import { formatDuration } from "@/lib/time";
 import { useMemo } from "react";
 import dayjs from "dayjs";
+import { ClockCheckIcon } from "../ui/icons/clock-check-icon";
+import { ClockFadingIcon } from "../ui/icons/clock-fading-icon";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -205,7 +200,10 @@ export function StatusCard({
               {isHydrated ? timeRange?.start : "\u2014"}
             </p>
             <p>
-              <ClockCheckIcon className="size-3 inline-block mr-1 mb-0.5" />
+              <ClockCheckIcon
+                className="size-3 inline-block mr-1 mb-0.5"
+                checkColor="oklch(0.627 0.194 149.214)"
+              />
               {isHydrated ? `${timeRange?.end}` : "\u2014"}
             </p>
           </>
