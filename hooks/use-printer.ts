@@ -23,6 +23,7 @@ function mergeTelemetry(
 
 export function usePrinter(host: string | undefined) {
   const clientRef = useRef<CrealityWebSocketClient | null>(null);
+  const previousHostRef = useRef<string | undefined>(undefined);
   const [serverTelemetry, setServerTelemetry] = useState<PrinterTelemetry>({});
   const [optimisticPatch, setOptimisticPatch] =
     useState<Partial<PrinterTelemetry> | null>(null);
@@ -43,13 +44,27 @@ export function usePrinter(host: string | undefined) {
 
   useEffect(() => {
     if (!host) {
+      previousHostRef.current = undefined;
+      setServerTelemetry({});
+      setOptimisticPatch(null);
+      setIsConnected(false);
       return;
+    }
+
+    if (previousHostRef.current !== host) {
+      previousHostRef.current = host;
+      setServerTelemetry({});
+      setOptimisticPatch(null);
     }
 
     const client = new CrealityWebSocketClient(host);
     clientRef.current = client;
 
-    const unsubscribeState = client.onStateChange((telemetry) => {
+    const handleStateChange = (telemetry: PrinterTelemetry) => {
+      if (clientRef.current !== client) {
+        return;
+      }
+
       serverTelemetryRef.current = telemetry;
       setServerTelemetry(telemetry);
       notifyTelemetryListeners(telemetry);
@@ -65,26 +80,33 @@ export function usePrinter(host: string | undefined) {
 
         return serverMatchesPatch ? null : current;
       });
-    });
-    const unsubscribeConnection = client.onConnectionChange(setIsConnected);
-
-    const init = async () => {
-      client.start();
-      const telemetry = client.getTelemetry();
-      setServerTelemetry(telemetry);
-      notifyTelemetryListeners(telemetry);
-      setIsConnected(client.isConnected());
     };
-    void init();
+
+    const handleConnectionChange = (connected: boolean) => {
+      if (clientRef.current !== client) {
+        return;
+      }
+
+      setIsConnected(connected);
+    };
+
+    const unsubscribeState = client.onStateChange(handleStateChange);
+    const unsubscribeConnection =
+      client.onConnectionChange(handleConnectionChange);
+
+    client.start();
+    const telemetry = client.getTelemetry();
+    serverTelemetryRef.current = telemetry;
+    setServerTelemetry(telemetry);
+    notifyTelemetryListeners(telemetry);
+    setIsConnected(client.isConnected());
 
     return () => {
+      clientRef.current = null;
       unsubscribeState();
       unsubscribeConnection();
       client.stop();
-      clientRef.current = null;
-      setServerTelemetry({});
       setOptimisticPatch(null);
-      setIsConnected(false);
     };
   }, [host, notifyTelemetryListeners]);
 

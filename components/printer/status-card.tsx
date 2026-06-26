@@ -123,7 +123,7 @@ export function StatusCard({
       printStartTime != null ||
       expectedCompletionTime != null);
 
-  const isPrinting = status === "printing";
+  const isLivePrint = isActivePrintStatus(status);
 
   return (
     <Card className="flex-1">
@@ -135,7 +135,7 @@ export function StatusCard({
         <CardDescription className="break-all leading-none">
           {filename}
         </CardDescription>
-        {isPrinting ? (
+        {isLivePrint ? (
           <CardAction>
             <p className="font-medium text-right">
               <span className="flex items-center gap-2.5">
@@ -150,7 +150,7 @@ export function StatusCard({
                 </span>
               </span>
               <span>
-                {isPrinting
+                {isLivePrint
                   ? formatDuration(elapsedSeconds + remainingSeconds)
                   : "\u2014"}
               </span>
@@ -175,17 +175,17 @@ export function StatusCard({
           <div>
             <p className="text-muted-foreground">Elapsed</p>
             <Duration
-              duration={isPrinting ? elapsedSeconds : 0}
+              duration={isLivePrint ? elapsedSeconds : 0}
               className="font-medium text-xl"
-              realTime={isPrinting}
+              realTime={isLivePrint}
             />
           </div>
           <div>
             <p className="text-muted-foreground text-right">Remaining</p>
             <Duration
-              duration={isPrinting ? remainingSeconds : 0}
+              duration={isLivePrint ? remainingSeconds : 0}
               className="font-medium text-xl text-right"
-              realTime={isPrinting}
+              realTime={isLivePrint}
               countDown
             />
           </div>

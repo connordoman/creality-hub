@@ -1,6 +1,7 @@
 import {
   GET_PRINTER_PARA_INTERVAL_MS,
   GET_PRINT_OBJECTS_INTERVAL_MS,
+  RECONNECT_GRACE_MS,
   RETRY_MAX_MS,
   RETRY_MIN_MS,
   RETRY_MULTIPLIER,
@@ -13,12 +14,29 @@ import type { PrinterCommand, PrinterTelemetry } from "./types";
 type StateListener = (telemetry: PrinterTelemetry) => void;
 type ConnectionListener = (connected: boolean) => void;
 
+function mergeTelemetry(
+  current: PrinterTelemetry,
+  incoming: PrinterTelemetry,
+): PrinterTelemetry {
+  const merged = { ...current };
+
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value !== undefined && value !== null) {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+}
+
 export class CrealityWebSocketClient {
   private ws: WebSocket | null = null;
   private state: PrinterTelemetry = {};
   private stopped = false;
+  private connected = false;
   private reconnectDelay = RETRY_MIN_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private disconnectGraceTimer: ReturnType<typeof setTimeout> | null = null;
   private paraTimer: ReturnType<typeof setInterval> | null = null;
   private objectsTimer: ReturnType<typeof setInterval> | null = null;
   private staleTimer: ReturnType<typeof setInterval> | null = null;
@@ -37,14 +55,9 @@ export class CrealityWebSocketClient {
   stop(): void {
     this.stopped = true;
     this.clearTimers();
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
+    this.clearReconnectTimer();
+    this.clearDisconnectGraceTimer();
+    this.closeSocket();
     this.setConnected(false);
   }
 
@@ -53,10 +66,19 @@ export class CrealityWebSocketClient {
   }
 
   isConnected(): boolean {
-    return (
-      this.ws?.readyState === WebSocket.OPEN &&
-      Date.now() - this.lastRx < STALE_AFTER_MS
-    );
+    return this.connected;
+  }
+
+  private isSocketOpen(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  private isStale(): boolean {
+    return this.isSocketOpen() && Date.now() - this.lastRx >= STALE_AFTER_MS;
+  }
+
+  private isActiveSocket(ws: WebSocket): boolean {
+    return !this.stopped && this.ws === ws;
   }
 
   onStateChange(listener: StateListener): () => void {
@@ -92,31 +114,46 @@ export class CrealityWebSocketClient {
   private connect(): void {
     if (this.stopped) return;
 
+    this.closeSocket();
+
     const url = wsUrl(this.host);
     const ws = new WebSocket(url);
     this.ws = ws;
 
     ws.onopen = () => {
+      if (!this.isActiveSocket(ws)) return;
+
       this.reconnectDelay = RETRY_MIN_MS;
       this.lastRx = Date.now();
+      this.clearDisconnectGraceTimer();
       this.setConnected(true);
       this.startPeriodicGets();
       this.sendJson({ method: "get", params: { ReqPrinterPara: 1 } });
     };
 
     ws.onmessage = (event) => {
+      if (!this.isActiveSocket(ws)) return;
+
       this.lastRx = Date.now();
       this.handleMessage(event.data);
     };
 
-    ws.onerror = () => {
-      this.setConnected(false);
-    };
-
     ws.onclose = () => {
+      if (this.ws === ws) {
+        this.ws = null;
+      }
+
       this.clearPeriodicGets();
-      this.ws = null;
-      this.setConnected(false);
+
+      if (this.stopped) {
+        this.clearDisconnectGraceTimer();
+        this.setConnected(false);
+        return;
+      }
+
+      // The printer often closes the socket between exchanges. Stay
+      // "connected" during auto-reconnect instead of flickering every second.
+      this.armDisconnectGraceTimer();
       this.scheduleReconnect();
     };
   }
@@ -151,7 +188,7 @@ export class CrealityWebSocketClient {
       }
 
       const merged = coerceNumbers(payload) as PrinterTelemetry;
-      this.state = { ...this.state, ...merged };
+      this.state = mergeTelemetry(this.state, merged);
       this.emitState();
     } catch {
       // Ignore non-JSON frames.
@@ -194,9 +231,56 @@ export class CrealityWebSocketClient {
     if (this.staleTimer) return;
 
     this.staleTimer = setInterval(() => {
-      const connected = this.isConnected();
-      this.connectionListeners.forEach((listener) => listener(connected));
+      if (this.isStale()) {
+        this.ws?.close();
+      }
     }, 2_000);
+  }
+
+  private closeSocket(): void {
+    const ws = this.ws;
+    if (!ws) return;
+
+    ws.onopen = null;
+    ws.onmessage = null;
+    ws.onclose = null;
+    ws.onerror = null;
+
+    if (
+      ws.readyState === WebSocket.OPEN ||
+      ws.readyState === WebSocket.CONNECTING
+    ) {
+      ws.close();
+    }
+
+    if (this.ws === ws) {
+      this.ws = null;
+    }
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
+  private clearDisconnectGraceTimer(): void {
+    if (this.disconnectGraceTimer) {
+      clearTimeout(this.disconnectGraceTimer);
+      this.disconnectGraceTimer = null;
+    }
+  }
+
+  private armDisconnectGraceTimer(): void {
+    this.clearDisconnectGraceTimer();
+
+    this.disconnectGraceTimer = setTimeout(() => {
+      this.disconnectGraceTimer = null;
+      if (!this.stopped && !this.isSocketOpen()) {
+        this.setConnected(false);
+      }
+    }, RECONNECT_GRACE_MS);
   }
 
   private clearTimers(): void {
@@ -208,6 +292,11 @@ export class CrealityWebSocketClient {
   }
 
   private setConnected(connected: boolean): void {
+    if (connected === this.connected) {
+      return;
+    }
+
+    this.connected = connected;
     this.connectionListeners.forEach((listener) => listener(connected));
   }
 

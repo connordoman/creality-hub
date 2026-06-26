@@ -3,6 +3,7 @@ export const MOONRAKER_PORT = 7125;
 export const WEBRTC_PORT = 8000;
 
 export const STALE_AFTER_MS = 15_000;
+export const RECONNECT_GRACE_MS = 5_000;
 export const RETRY_MIN_MS = 1_000;
 export const RETRY_MAX_MS = 30_000;
 export const RETRY_MULTIPLIER = 1.8;
