@@ -146,7 +146,8 @@ export function StatusCard({
                 </span>
                 <span className="whitespace-nowrap">
                   <WeightIcon className="size-3 inline-block mr-1 mb-0.5" />
-                  {expectedWeight?.value?.toFixed(1)} {expectedWeight?.unit}
+                  {expectedWeight?.value?.toFixed(1) ?? "\u2014"}{" "}
+                  {expectedWeight?.unit}
                 </span>
               </span>
               <span>

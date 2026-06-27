@@ -5,7 +5,7 @@ import { Download, Share, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-const PROMPT_DELAY_MS = 60_000;
+const PROMPT_DELAY_MS = process.env.NODE_ENV === "development" ? 1000 : 60_000;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -48,11 +48,12 @@ export function InstallPrompt() {
   }, []);
 
   useEffect(() => {
+    const isDev = process.env.NODE_ENV === "development";
     if (shownRef.current || isStandalone || dismissed) {
       return;
     }
 
-    if (!deferredPrompt && !isIOS) {
+    if (!isDev && !deferredPrompt && !isIOS) {
       return;
     }
 
@@ -61,7 +62,7 @@ export function InstallPrompt() {
         return;
       }
 
-      if (!deferredPromptRef.current && !isIOS) {
+      if (!isDev && !deferredPromptRef.current && !isIOS) {
         return;
       }
 
@@ -69,7 +70,7 @@ export function InstallPrompt() {
 
       toast.custom(
         (toastId) => (
-          <div className="flex w-full max-w-md items-start gap-3">
+          <div className="flex w-full max-w-md items-start gap-3 bg-card p-4 rounded-none shadow-lg border border-border">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Download className="size-5" />
             </div>
@@ -77,8 +78,8 @@ export function InstallPrompt() {
               <p className="font-medium">Install Creality Hub</p>
               {isIOS ? (
                 <p className="text-sm text-muted-foreground">
-                  Tap <Share className="mr-1 inline size-3" /> Share, then
-                  &ldquo;Add to Home Screen&rdquo; to install this app.
+                  Tap <Share className="mr-1 inline size-3 mb-0.5" /> Share,
+                  then &ldquo;Add to Home Screen&rdquo; to install this app.
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -107,7 +108,7 @@ export function InstallPrompt() {
                 ) : null}
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="secondary"
                   onClick={() => {
                     setDismissed(true);
                     toast.dismiss(toastId);

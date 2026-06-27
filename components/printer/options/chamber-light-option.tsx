@@ -2,8 +2,6 @@
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { usePrinterSettings } from "@/context/printer-settings";
-import { usePrinter } from "@/hooks/use-printer";
 import {
   getPrinterCommandPendingValue,
   PrinterCommandContext,

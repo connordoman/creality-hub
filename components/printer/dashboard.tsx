@@ -1,17 +1,8 @@
 "use client";
 
-import {
-  getPrinterCommandPendingValue,
-  usePrinterCommandMutation,
-} from "@/hooks/use-printer-command";
 import { usePrinter } from "@/hooks/use-printer";
 import { usePrinterSettings } from "@/context/printer-settings";
-import {
-  chamberLightCommand,
-  getChamberLightDisplayState,
-} from "@/lib/creality/printer-commands";
 import { CameraViewer } from "./camera-viewer";
-import { ChamberLight } from "./chamber-light";
 import { ConnectionBadge } from "./connection-badge";
 import { PrintControls } from "./print-controls";
 import { PrintHistory } from "./print-history";

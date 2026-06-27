@@ -13,6 +13,7 @@ import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
 import {
   AirVentIcon,
   FanIcon,
+  FlameIcon,
   HeaterIcon,
   ThermometerIcon,
 } from "lucide-react";
@@ -26,7 +27,7 @@ interface PhaseIconProps {
 export function PhaseIcon({ phase }: PhaseIconProps) {
   switch (phase) {
     case "heating":
-      return <HeaterIcon className="size-3 text-orange-500 animate-pulse" />;
+      return <FlameIcon className="size-3 text-orange-500 animate-pulse" />;
     case "cooling":
       return <FanIcon className="size-3 text-blue-500 animate-spin-reverse" />;
     default:

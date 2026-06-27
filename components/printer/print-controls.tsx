@@ -15,7 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
-import { useState } from "react";
+import { startTransition, useEffect, useState } from "react";
+import { Spinner } from "../ui/spinner";
 
 interface PrintControlsProps {
   status: PrintStatus;
@@ -24,6 +25,25 @@ interface PrintControlsProps {
 
 export function PrintControls({ status, onCommand }: PrintControlsProps) {
   const [showConfirmStop, setShowConfirmStop] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
+
+  useEffect(() => {
+    if (!isStopping) {
+      return;
+    }
+
+    if (status !== "printing") {
+      startTransition(() => {
+        setIsStopping(false);
+        setShowConfirmStop(false);
+      });
+    }
+  }, [status, isStopping]);
+
+  const handleStop = () => {
+    onCommand("stop");
+    setIsStopping(true);
+  };
 
   const isHydrated = useIsHydrated();
   const canPause = status === "printing";
@@ -83,9 +103,10 @@ export function PrintControls({ status, onCommand }: PrintControlsProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={() => onCommand("stop")}
+              disabled={isStopping}
+              onClick={handleStop}
             >
-              Stop Print
+              {isStopping ? <Spinner className="size-4" /> : null}Stop Print
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
