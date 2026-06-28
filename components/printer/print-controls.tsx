@@ -17,13 +17,19 @@ import {
 } from "../ui/alert-dialog";
 import { startTransition, useEffect, useState } from "react";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 interface PrintControlsProps {
   status: PrintStatus;
   onCommand: (command: PrinterCommand) => void;
+  className?: string;
 }
 
-export function PrintControls({ status, onCommand }: PrintControlsProps) {
+export function PrintControls({
+  status,
+  onCommand,
+  className,
+}: PrintControlsProps) {
   const [showConfirmStop, setShowConfirmStop] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
 
@@ -53,7 +59,7 @@ export function PrintControls({ status, onCommand }: PrintControlsProps) {
 
   return (
     <>
-      <Card>
+      <Card className={cn("flex-1", className)}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ToggleRightIcon className="size-4" />

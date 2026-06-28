@@ -10,13 +10,8 @@ import {
 import { useHeaterPhases } from "@/hooks/use-heater-phases";
 import { formatTemperature } from "@/lib/temperature";
 import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
-import {
-  AirVentIcon,
-  FanIcon,
-  FlameIcon,
-  HeaterIcon,
-  ThermometerIcon,
-} from "lucide-react";
+import { FanIcon, FlameIcon, ThermometerIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type { HeaterPhase };
 
@@ -71,23 +66,22 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
 
 interface TemperatureCardProps {
   telemetry: PrinterTelemetry;
+  className?: string;
 }
 
-export function TemperatureCard({ telemetry }: TemperatureCardProps) {
-  const { data: phases } = useHeaterPhases(
-    undefined,
-    process.env.NODE_ENV === "development"
-  );
-
+export function TemperatureCard({
+  telemetry,
+  className,
+}: TemperatureCardProps) {
   return (
-    <Card>
+    <Card className={cn("flex-1", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ThermometerIcon className="size-4" />
           Temperatures
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-3 grid-cols-3">
+      <CardContent className="grid gap-3 grid-cols-3 flex-1">
         <TempBlock
           label="Nozzle"
           current={telemetry.nozzleTemp}
@@ -104,11 +98,6 @@ export function TemperatureCard({ telemetry }: TemperatureCardProps) {
           target={telemetry.targetBoxTemp}
         />
       </CardContent>
-      {process.env.NODE_ENV === "development" && (
-        <CardFooter>
-          <pre>{JSON.stringify(phases.raw, null, 2)}</pre>
-        </CardFooter>
-      )}
     </Card>
   );
 }

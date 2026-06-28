@@ -6,21 +6,39 @@ import {
   Card,
   CardAction,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CrealityWebRTCClient } from "@/lib/creality/webrtc-client";
-import { AlertCircleIcon, CctvIcon, RefreshCw } from "lucide-react";
+import {
+  AlertCircleIcon,
+  CctvIcon,
+  ExpandIcon,
+  RefreshCw,
+  ShrinkIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 interface ActiveCameraConnection {
   client: CrealityWebRTCClient;
   controller: AbortController;
 }
 
-export function CameraViewer() {
+interface CameraViewerProps {
+  maximized?: boolean;
+  onMaximize?: () => void;
+  className?: string;
+}
+
+export function CameraViewer({
+  maximized,
+  onMaximize,
+  className,
+}: CameraViewerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const connectionRef = useRef<ActiveCameraConnection | null>(null);
   const generationRef = useRef(0);
@@ -130,26 +148,18 @@ export function CameraViewer() {
   }, [runConnection]);
 
   return (
-    <Card className="">
+    <Card className={cn("flex-1", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CctvIcon className="size-4" />
           Chamber Camera
         </CardTitle>
         <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isConnecting}
-            onClick={reconnect}
-          >
-            {isConnecting ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <RefreshCw data-icon="inline-start" />
-            )}
-            {isConnecting ? "Connecting..." : "Reconnect"}
-          </Button>
+          {onMaximize ? (
+            <Button variant="ghost" size="icon" onClick={onMaximize}>
+              {maximized ? <ShrinkIcon /> : <ExpandIcon />}
+            </Button>
+          ) : null}
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -179,6 +189,21 @@ export function CameraViewer() {
           </Alert>
         ) : null}
       </CardContent>
+      <CardFooter>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isConnecting}
+          onClick={reconnect}
+        >
+          {isConnecting ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <RefreshCw data-icon="inline-start" />
+          )}
+          {isConnecting ? "Connecting..." : "Reconnect"}
+        </Button>
+      </CardFooter>
     </Card>
   );
 }

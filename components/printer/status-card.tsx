@@ -30,12 +30,14 @@ import { useMemo } from "react";
 import dayjs from "dayjs";
 import { ClockCheckIcon } from "../ui/icons/clock-check-icon";
 import { ClockFadingIcon } from "../ui/icons/clock-fading-icon";
+import { cn } from "@/lib/utils";
 
 interface StatusCardProps {
   status: PrintStatus;
   telemetry: PrinterTelemetry;
   elapsedSeconds: number;
   remainingSeconds: number;
+  className?: string;
 }
 
 const statusVariant: Record<
@@ -58,6 +60,7 @@ export function StatusCard({
   telemetry,
   elapsedSeconds,
   remainingSeconds,
+  className,
 }: StatusCardProps) {
   const progress = getProgress(telemetry) ?? 0;
 
@@ -126,7 +129,7 @@ export function StatusCard({
   const isLivePrint = isActivePrintStatus(status);
 
   return (
-    <Card className="flex-1">
+    <Card className={cn("flex-1 flex", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PrinterIcon className="size-4" />
@@ -159,7 +162,7 @@ export function StatusCard({
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
         <Badge variant={statusVariant[status]} className="capitalize">
           {status.replace("-", " ")}
         </Badge>
@@ -193,8 +196,8 @@ export function StatusCard({
         </div>
       </CardContent>
 
-      <CardFooter className=" gap-1 text-xs text-muted-foreground flex-row items-center justify-between">
-        {showScheduleFooter ? (
+      {showScheduleFooter ? (
+        <CardFooter className=" gap-1 text-xs text-muted-foreground flex-row items-center justify-between">
           <>
             <p>
               <ClockFadingIcon className="size-3 inline-block mr-1 mb-0.5" />
@@ -208,8 +211,8 @@ export function StatusCard({
               {isHydrated ? `${timeRange?.end}` : "\u2014"}
             </p>
           </>
-        ) : null}
-      </CardFooter>
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }

@@ -11,8 +11,12 @@ import { StatusCard } from "./status-card";
 import { TemperatureCard } from "./temperature-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PrinterOptions } from "./printer-options";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function Dashboard() {
+  const [cameraMaximized, setCameraMaximized] = useState(false);
+
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
   const {
     telemetry,
@@ -61,25 +65,31 @@ export function Dashboard() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
-        <div className="row-start-2 md:row-start-auto flex flex-col gap-6">
-          <StatusCard
-            status={status}
-            telemetry={telemetry}
-            elapsedSeconds={elapsedSeconds}
-            remainingSeconds={remainingSeconds}
-          />
-          <TemperatureCard telemetry={telemetry} />
-          <PrintControls status={status} onCommand={sendCommand} />
-        </div>
-        <div className="row-start-1 md:row-start-auto space-y-6">
-          <CameraViewer />
-          <PrinterOptions
-            telemetry={telemetry}
-            commandContext={commandContext}
-            isConnected={isConnected}
-          />
-        </div>
+      <div
+        className={cn(
+          "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
+          cameraMaximized ? "flex flex-col" : ""
+        )}
+      >
+        <CameraViewer
+          className="row-span-2 col-start-1 lg:col-start-2 lg:row-start-1"
+          maximized={cameraMaximized}
+          onMaximize={() => setCameraMaximized(!cameraMaximized)}
+        />
+        <StatusCard
+          status={status}
+          telemetry={telemetry}
+          elapsedSeconds={elapsedSeconds}
+          remainingSeconds={remainingSeconds}
+        />
+        <TemperatureCard telemetry={telemetry} />
+        <PrintControls status={status} onCommand={sendCommand} />
+
+        <PrinterOptions
+          telemetry={telemetry}
+          commandContext={commandContext}
+          isConnected={isConnected}
+        />
       </div>
 
       <PrintHistory />
