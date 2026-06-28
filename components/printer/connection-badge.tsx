@@ -3,18 +3,22 @@ import { cn } from "@/lib/utils";
 
 interface ConnectionBadgeProps {
   connected: boolean;
+  className?: string;
 }
 
-export function ConnectionBadge({ connected }: ConnectionBadgeProps) {
+export function ConnectionBadge({
+  connected,
+  className,
+}: ConnectionBadgeProps) {
   return (
     <Badge
       variant={connected ? "default" : "destructive"}
-      className={cn("gap-2 uppercase tracking-wide")}
+      className={cn("gap-2 uppercase tracking-wide", className)}
     >
       <span
         className={cn(
           "size-2 rounded-full",
-          connected ? "bg-primary-foreground animate-pulse" : "bg-destructive",
+          connected ? "bg-primary-foreground animate-pulse" : "bg-destructive"
         )}
       />
       {connected ? "Connected" : "Disconnected"}

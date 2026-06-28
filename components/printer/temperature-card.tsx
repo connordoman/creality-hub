@@ -48,18 +48,20 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
   return (
     <div
       data-phase={derivedPhase}
-      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3"
+      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3 flex flex-col justify-between"
     >
       <header className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{label}</p>
         <PhaseIcon phase={derivedPhase} />
       </header>
-      <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
-        {formatTemperature(current)}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {formatTemperature(target, 0)}
-      </p>
+      <div>
+        <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
+          {formatTemperature(current)}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {formatTemperature(target, 0)}
+        </p>
+      </div>
     </div>
   );
 }

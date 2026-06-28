@@ -46,10 +46,7 @@ export function ChamberLightOption({
 
   return (
     <Label className="w-full flex items-center justify-between cursor-pointer">
-      <span className="text-sm text-muted-foreground">
-        <Lightbulb on={displayOn} className="size-4 inline-block mr-2 mb-0.5" />
-        Chamber light
-      </span>
+      <span className="text-sm text-muted-foreground">Chamber light</span>
       <Switch
         checked={displayOn}
         size="lg"

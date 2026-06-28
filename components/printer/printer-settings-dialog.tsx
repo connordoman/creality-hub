@@ -19,15 +19,11 @@ import {
 } from "@/lib/settings/validation";
 import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
+import { Input } from "../ui/input";
 
 export function PrinterSettingsDialog() {
-  const {
-    printerHost,
-    printerName,
-    isSaving,
-    saveError,
-    updateSettings,
-  } = usePrinterSettings();
+  const { printerHost, printerName, isSaving, saveError, updateSettings } =
+    usePrinterSettings();
   const [open, setOpen] = useState(false);
   const [draftHost, setDraftHost] = useState("");
   const [draftName, setDraftName] = useState("");
@@ -89,8 +85,8 @@ export function PrinterSettingsDialog() {
 
         <div className="space-y-4">
           <Field>
-            <FieldLabel htmlFor="printer-name">Printer name</FieldLabel>
-            <input
+            <FieldLabel htmlFor="printer-name">Printer nickname</FieldLabel>
+            <Input
               id="printer-name"
               name="printer-name"
               type="text"
@@ -98,14 +94,15 @@ export function PrinterSettingsDialog() {
               value={draftName}
               disabled={isSaving}
               placeholder="Creality K1C"
-              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:opacity-50"
               onChange={(event) => setDraftName(event.target.value)}
             />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="printer-host">Printer IP or hostname</FieldLabel>
-            <input
+            <FieldLabel htmlFor="printer-host">
+              Printer IP or hostname
+            </FieldLabel>
+            <Input
               id="printer-host"
               name="printer-host"
               type="text"
@@ -115,7 +112,6 @@ export function PrinterSettingsDialog() {
               value={draftHost}
               disabled={isSaving}
               placeholder="10.0.0.184"
-              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:opacity-50"
               onChange={(event) => setDraftHost(event.target.value)}
             />
           </Field>
@@ -129,7 +125,9 @@ export function PrinterSettingsDialog() {
         </div>
 
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" disabled={isSaving} />}>
+          <DialogClose
+            render={<Button variant="outline" disabled={isSaving} />}
+          >
             Cancel
           </DialogClose>
           <Button disabled={isSaving} onClick={() => void handleSave()}>
