@@ -24,13 +24,15 @@ import { Duration } from "../ui/duration";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
-import { PrinterIcon, RulerIcon, WeightIcon } from "lucide-react";
+import { PauseIcon, PrinterIcon, RulerIcon, WeightIcon } from "lucide-react";
 import { formatDuration } from "@/lib/time";
 import { useMemo } from "react";
 import dayjs from "dayjs";
 import { ClockCheckIcon } from "../ui/icons/clock-check-icon";
 import { ClockFadingIcon } from "../ui/icons/clock-fading-icon";
 import { cn } from "@/lib/utils";
+import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
+import { Spinner } from "../ui/spinner";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -64,7 +66,7 @@ export function StatusCard({
 }: StatusCardProps) {
   const progress = getProgress(telemetry) ?? 0;
 
-  const filename = formatFileName(telemetry.printFileName) || "No active print";
+  const filename = formatFileName(telemetry.printFileName);
 
   const { data: metadata } = usePrintMetadata(
     formatFileName(telemetry.printFileName)
@@ -74,6 +76,8 @@ export function StatusCard({
     metadata?.filamentTotalMm,
     metadata?.filamentTotalG
   );
+
+  const { data: gcodeAnalysis, isLoading } = useGcodeAnalysis(filename);
 
   const isHydrated = useIsHydrated();
 
@@ -128,6 +132,10 @@ export function StatusCard({
 
   const isLivePrint = isActivePrintStatus(status);
 
+  const layerCount = gcodeAnalysis?.totalLayerCount
+    ? `${gcodeAnalysis.totalLayerCount} layers`
+    : "\u2014";
+
   return (
     <Card className={cn("flex-1 flex", className)}>
       <CardHeader>
@@ -136,7 +144,12 @@ export function StatusCard({
           Print Status
         </CardTitle>
         <CardDescription className="break-all leading-none">
-          {filename}
+          {filename || "No active print"}
+          {isLoading ? (
+            <Badge variant="outline" className="ml-2">
+              <Spinner /> Analyzing...
+            </Badge>
+          ) : null}
         </CardDescription>
         {isLivePrint ? (
           <CardAction>
@@ -158,6 +171,8 @@ export function StatusCard({
                   ? formatDuration(elapsedSeconds + remainingSeconds)
                   : "\u2014"}
               </span>
+              <br />
+              <span>{layerCount}</span>
             </p>
           </CardAction>
         ) : null}
@@ -172,7 +187,19 @@ export function StatusCard({
             <span className="text-muted-foreground">Progress</span>
             <span className="ml-auto">{Math.round(progress)}%</span>
           </FieldLabel>
-          <Progress id="print-progress" value={progress} />
+          <Progress
+            id="print-progress"
+            value={progress}
+            indications={gcodeAnalysis?.pauses.map((pause) => ({
+              percentage: pause.percentage,
+              label: (
+                <>
+                  <PauseIcon className="size" />
+                  <span>{Math.floor(pause.percentage)}%</span>
+                </>
+              ),
+            }))}
+          />
         </Field>
 
         <div className="flex justify-between text-sm">
