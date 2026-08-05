@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PrinterOptions } from "./printer-options";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
+import { formatFileName } from "@/lib/fs";
 
 export function Dashboard() {
   const [cameraMaximized, setCameraMaximized] = useState(false);
@@ -27,6 +29,10 @@ export function Dashboard() {
     sendCommand,
     commandContext,
   } = usePrinter(printerHost);
+
+  const { data: gcodeAnalysis } = useGcodeAnalysis(
+    formatFileName(telemetry.printFileName)
+  );
 
   if (isLoading) {
     return (
@@ -85,7 +91,10 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
-        <TemperatureCard telemetry={telemetry} />
+        <TemperatureCard
+          telemetry={telemetry}
+          filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
+        />
         <PrintControls status={status} onCommand={sendCommand} />
 
         <PrinterOptions

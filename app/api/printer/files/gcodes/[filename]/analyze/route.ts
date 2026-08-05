@@ -1,5 +1,9 @@
 import { moonrakerUrl } from "@/lib/creality/config";
-import { gcodeBoundsFromMetadata, parseGcodeAnalysis } from "@/lib/gcode/parse";
+import {
+  filamentTypeFromMetadata,
+  gcodeBoundsFromMetadata,
+  parseGcodeAnalysis,
+} from "@/lib/gcode/parse";
 import { getPrinterHost } from "@/lib/settings/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -67,6 +71,7 @@ export async function GET(
 
     const gcode = await gcodeResponse.text();
     const metadataBounds = gcodeBoundsFromMetadata(metadata ?? undefined);
+    const filamentType = filamentTypeFromMetadata(metadata ?? undefined);
     const analysis = parseGcodeAnalysis(gcode);
 
     const totalLayerCount = Math.max(
@@ -77,6 +82,7 @@ export async function GET(
     return NextResponse.json({
       ...analysis,
       totalLayerCount,
+      filamentType,
       bounds: {
         ...metadataBounds,
         layerCount: metadataBounds.layerCount ?? analysis.bounds.layerCount,

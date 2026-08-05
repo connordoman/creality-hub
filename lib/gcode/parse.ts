@@ -18,6 +18,7 @@ export interface GcodeAnalysis {
   bounds: GcodeAnalysisBounds;
   totalLayerCount: number;
   totalLineCount: number;
+  filamentType: string | string[] | null;
 }
 
 const PAUSE_LINE_RE = /^\s*PAUSE(?:\s|;|$)/i;
@@ -44,6 +45,38 @@ export function gcodeBoundsFromMetadata(
     gcodeEndByte: readBoundsNumber(metadata?.gcode_end_byte),
     layerCount: readBoundsNumber(metadata?.layer_count),
   };
+}
+
+export function filamentTypeFromMetadata(
+  metadata: Record<string, unknown> | undefined
+): string | string[] | null {
+  const value = metadata?.filament_type;
+  if (typeof value !== "string" || value.trim() === "") {
+    return null;
+  }
+
+  if (value.startsWith("[")) {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (
+        Array.isArray(parsed) &&
+        parsed.every((item) => typeof item === "string")
+      ) {
+        return parsed;
+      }
+    } catch {
+      // Fall through to scalar handling.
+    }
+  }
+
+  if (value.includes(";")) {
+    return value
+      .split(";")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return value;
 }
 
 function parseLayerFromLine(line: string): number | null {
@@ -134,5 +167,6 @@ export function parseGcodeAnalysis(gcode: string): GcodeAnalysis {
     },
     totalLayerCount,
     totalLineCount: lines.length,
+    filamentType: null,
   };
 }

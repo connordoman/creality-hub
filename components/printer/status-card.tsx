@@ -33,6 +33,7 @@ import { ClockFadingIcon } from "../ui/icons/clock-fading-icon";
 import { cn } from "@/lib/utils";
 import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { Spinner } from "../ui/spinner";
+import { evaluateChamberTemperature } from "@/lib/gcode/temperature";
 
 interface StatusCardProps {
   status: PrintStatus;
@@ -142,6 +143,14 @@ export function StatusCard({
         <CardTitle className="flex items-center gap-2">
           <PrinterIcon className="size-4" />
           Print Status
+          <Badge variant={statusVariant[status]} className="capitalize">
+            {status.replace("-", " ")}
+          </Badge>
+          {gcodeAnalysis?.filamentType ? (
+            <Badge variant="outline" className="capitalize">
+              {gcodeAnalysis.filamentType}
+            </Badge>
+          ) : null}
         </CardTitle>
         <CardDescription className="break-all leading-none">
           {filename || "No active print"}
@@ -178,10 +187,6 @@ export function StatusCard({
         ) : null}
       </CardHeader>
       <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
-        <Badge variant={statusVariant[status]} className="capitalize">
-          {status.replace("-", " ")}
-        </Badge>
-
         <Field className="space-y-2">
           <FieldLabel htmlFor="print-progress">
             <span className="text-muted-foreground">Progress</span>
