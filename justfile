@@ -25,3 +25,35 @@ push:
         --tag {{image}}:{{tag}} \
         --push \
         .
+
+# Build & push :VERSION and :latest, then create and push an annotated git tag.
+# Usage:
+#   just release 0.1.0
+#   just release 0.1.0 "Temperature card and UI polish"
+release version message='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    version="{{version}}"
+    message="{{message}}"
+    docker_tag="${version#v}"
+    git_tag="v${docker_tag}"
+
+    echo "Building and pushing {{image}}:${docker_tag} and {{image}}:latest..."
+    docker buildx build \
+        --platform {{platform}} \
+        --tag "{{image}}:${docker_tag}" \
+        --tag "{{image}}:latest" \
+        --push \
+        .
+
+    if git rev-parse "$git_tag" >/dev/null 2>&1; then
+        echo "Error: git tag '$git_tag' already exists" >&2
+        exit 1
+    fi
+
+    tag_message="${message:-Release ${git_tag}}"
+    git tag -a "$git_tag" -m "$tag_message"
+    git push origin "$git_tag"
+
+    echo "Released ${git_tag}: {{image}}:${docker_tag}"
