@@ -25,6 +25,7 @@ import {
   ChamberTempStatus,
   evaluateChamberTemperature,
 } from "@/lib/gcode/temperature";
+import { NoHandIcon } from "../ui/icons/no-hand-icon";
 
 export type { HeaterPhase };
 
@@ -82,6 +83,8 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
     derivedPhase = direction > 0 ? "heating" : "cooling";
   }
 
+  const mayRiskInjury = current && current > 60;
+
   return (
     <div
       data-phase={derivedPhase}
@@ -92,9 +95,19 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
         <PhaseIcon phase={derivedPhase} />
       </header>
       <div>
-        <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
-          {formatTemperature(current)}
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
+            {formatTemperature(current)}
+          </p>
+          {mayRiskInjury ? (
+            <NoHandIcon
+              size="default"
+              className="text-orange-500 mt-1"
+              slashed={true}
+              slashedColor="oklch(0.705 0.213 47.604)"
+            />
+          ) : null}
+        </div>
         <p className="text-xs text-muted-foreground">
           {formatTemperature(target, 0)}
         </p>

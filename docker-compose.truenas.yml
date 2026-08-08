@@ -1,0 +1,30 @@
+# Creality Hub — TrueNAS Custom App
+#
+# Install:
+#   1. Apps → Discover → Custom App → ⋮ → Install via YAML
+#   2. App name: creality-hub
+#   3. Update PRINTER_HOST and the data volume path below, then paste this file
+#
+# Image: ghcr.io/connordoman/creality-hub:latest (linux/amd64)
+# Build & push your own: `just push`
+#
+# TrueNAS 25.10+ (compose file stored on a pool):
+#   include:
+#     - path: /mnt/tank/apps/creality-hub/docker-compose.truenas.yml
+#   services: {}
+#
+# Data directory must be writable by container user nextjs (uid 1001).
+
+services:
+  creality-hub:
+    image: ghcr.io/connordoman/creality-hub:latest
+    container_name: creality-hub
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      CREALITY_HUB_DATA_DIR: /data
+      # Default printer IP until changed in the app settings UI
+      PRINTER_HOST: 192.168.1.2
+    volumes:
+      - /mnt/tank/apps/creality-hub/data:/data

@@ -24,7 +24,13 @@ import { Duration } from "../ui/duration";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
-import { PauseIcon, PrinterIcon, RulerIcon, WeightIcon } from "lucide-react";
+import {
+  PauseIcon,
+  PrinterIcon,
+  RulerIcon,
+  SpoolIcon,
+  WeightIcon,
+} from "lucide-react";
 import { formatDuration } from "@/lib/time";
 import { useMemo } from "react";
 import dayjs from "dayjs";
@@ -109,23 +115,42 @@ export function StatusCard({
     if (printStartTime == null) return null;
     if (expectedCompletionTime == null) return null;
 
-    const start = dayjs(printStartTime * 1000);
-    const end = dayjs(expectedCompletionTime * 1000);
+    const startDate = new Date(printStartTime * 1000);
+    const endDate = new Date(expectedCompletionTime * 1000);
 
-    if (start.isSame(end, "day")) {
+    const sameDay =
+      startDate.getFullYear() === endDate.getFullYear() &&
+      startDate.getMonth() === endDate.getMonth() &&
+      startDate.getDate() === endDate.getDate();
+
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    if (sameDay) {
       return {
-        start: start.format("HH:mm"),
-        end: end.format("HH:mm"),
+        start: startDate.toLocaleTimeString(undefined, timeOptions),
+        end: endDate.toLocaleTimeString(undefined, timeOptions),
       };
     }
 
     return {
-      start: start.format("MMMM D, HH:mm"),
-      end: end.format("MMMM D, HH:mm"),
+      start: startDate.toLocaleString(undefined, dateOptions),
+      end: endDate.toLocaleString(undefined, dateOptions),
     };
   }, [printStartTime, expectedCompletionTime]);
 
-  const showScheduleFooter =
+  const showTimeRange =
     Boolean(formatFileName(telemetry.printFileName)) &&
     (isActivePrintStatus(status) ||
       printStartTime != null ||
@@ -165,7 +190,7 @@ export function StatusCard({
             <p className="font-medium text-right">
               <span className="flex items-center gap-2.5">
                 <span className="whitespace-nowrap">
-                  <RulerIcon className="size-3 inline-block mr-1 mb-0.5" />
+                  <SpoolIcon className="size-3 inline-block mr-1 mb-0.5" />
                   {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
                   {expectedLength?.unit ?? "m"}
                 </span>
@@ -186,7 +211,7 @@ export function StatusCard({
           </CardAction>
         ) : null}
       </CardHeader>
-      <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
+      <CardContent className="space-y-0 flex-1 flex flex-col justify-between">
         <Field className="space-y-2">
           <FieldLabel htmlFor="print-progress">
             <span className="text-muted-foreground">Progress</span>
@@ -206,6 +231,22 @@ export function StatusCard({
             }))}
           />
         </Field>
+
+        {showTimeRange ? (
+          <div className="flex gap-1 text-sm text-muted-foreground flex-row items-center justify-between mt-1">
+            <p aria-label="Print start time">
+              <ClockFadingIcon className="size-4 inline-block mr-1 mb-0.5" />
+              {isHydrated ? timeRange?.start : "\u2014"}
+            </p>
+            <p aria-label="Print end time">
+              <ClockCheckIcon
+                className="size-4 inline-block mr-1 mb-0.5"
+                checkColor="oklch(0.627 0.194 149.214)"
+              />
+              {isHydrated ? `${timeRange?.end}` : "\u2014"}
+            </p>
+          </div>
+        ) : null}
 
         <div className="flex justify-between text-sm">
           <div>
@@ -227,24 +268,6 @@ export function StatusCard({
           </div>
         </div>
       </CardContent>
-
-      {showScheduleFooter ? (
-        <CardFooter className=" gap-1 text-xs text-muted-foreground flex-row items-center justify-between">
-          <>
-            <p>
-              <ClockFadingIcon className="size-3 inline-block mr-1 mb-0.5" />
-              {isHydrated ? timeRange?.start : "\u2014"}
-            </p>
-            <p>
-              <ClockCheckIcon
-                className="size-3 inline-block mr-1 mb-0.5"
-                checkColor="oklch(0.627 0.194 149.214)"
-              />
-              {isHydrated ? `${timeRange?.end}` : "\u2014"}
-            </p>
-          </>
-        </CardFooter>
-      ) : null}
     </Card>
   );
 }
