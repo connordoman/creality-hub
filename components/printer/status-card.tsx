@@ -176,14 +176,14 @@ export function StatusCard({
               {gcodeAnalysis.filamentType}
             </Badge>
           ) : null}
-        </CardTitle>
-        <CardDescription className="break-all leading-none">
-          {filename || "No active print"}
           {isLoading ? (
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline">
               <Spinner /> Analyzing...
             </Badge>
           ) : null}
+        </CardTitle>
+        <CardDescription className="break-all leading-none">
+          {filename || "No active print"}
         </CardDescription>
         {isLivePrint ? (
           <CardAction>

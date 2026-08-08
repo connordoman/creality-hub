@@ -1,11 +1,24 @@
 import { moonrakerUrl } from "@/lib/creality/config";
 import {
+  GCODE_ANALYSIS_CACHE_CONTROL,
+  getCachedGcodeAnalysis,
+  gcodeAnalysisCacheKey,
+  setCachedGcodeAnalysis,
+} from "@/lib/gcode/analysis-cache";
+import {
   filamentTypeFromMetadata,
   gcodeBoundsFromMetadata,
   parseGcodeAnalysis,
+  type GcodeAnalysis,
 } from "@/lib/gcode/parse";
 import { getPrinterHost } from "@/lib/settings/server";
 import { NextRequest, NextResponse } from "next/server";
+
+function jsonWithCache(body: GcodeAnalysis) {
+  return NextResponse.json(body, {
+    headers: { "Cache-Control": GCODE_ANALYSIS_CACHE_CONTROL },
+  });
+}
 
 async function fetchGcodeMetadata(printerHost: string, filename: string) {
   const url = moonrakerUrl(
@@ -51,16 +64,20 @@ export async function GET(
   }
 
   const printerHost = await getPrinterHost();
-  const gcodeUrl = moonrakerUrl(
-    printerHost,
-    `/server/files/gcodes/${encodeURIComponent(filename)}`
-  );
 
   try {
-    const [gcodeResponse, metadata] = await Promise.all([
-      fetch(gcodeUrl, { cache: "no-store" }),
-      fetchGcodeMetadata(printerHost, filename),
-    ]);
+    const metadata = await fetchGcodeMetadata(printerHost, filename);
+    const cacheKey = gcodeAnalysisCacheKey(printerHost, filename, metadata);
+    const cached = getCachedGcodeAnalysis(cacheKey);
+    if (cached) {
+      return jsonWithCache(cached);
+    }
+
+    const gcodeUrl = moonrakerUrl(
+      printerHost,
+      `/server/files/gcodes/${encodeURIComponent(filename)}`
+    );
+    const gcodeResponse = await fetch(gcodeUrl, { cache: "no-store" });
 
     if (!gcodeResponse.ok) {
       return NextResponse.json(
@@ -79,7 +96,7 @@ export async function GET(
       metadataBounds.layerCount ?? 0
     );
 
-    return NextResponse.json({
+    const result: GcodeAnalysis = {
       ...analysis,
       totalLayerCount,
       filamentType,
@@ -87,7 +104,10 @@ export async function GET(
         ...metadataBounds,
         layerCount: metadataBounds.layerCount ?? analysis.bounds.layerCount,
       },
-    });
+    };
+
+    setCachedGcodeAnalysis(cacheKey, result);
+    return jsonWithCache(result);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to reach printer";
