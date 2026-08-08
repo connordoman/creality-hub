@@ -1,6 +1,7 @@
 "use client";
 
 import { usePrinter } from "@/hooks/use-printer";
+import { useRefetchPrintHistoryOnPrintStart } from "@/hooks/use-refetch-print-history-on-print-start";
 import { usePrinterSettings } from "@/context/printer-settings";
 import { CameraViewer } from "./camera-viewer";
 import { ConnectionBadge } from "./connection-badge";
@@ -29,6 +30,8 @@ export function Dashboard() {
     sendCommand,
     commandContext,
   } = usePrinter(printerHost);
+
+  useRefetchPrintHistoryOnPrintStart(status);
 
   const { data: gcodeAnalysis } = useGcodeAnalysis(
     formatFileName(telemetry.printFileName)
