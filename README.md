@@ -4,6 +4,8 @@ _This project is for fun and is not endorsed by Creality._
 
 A self-hostable web UI for Creality 3D printers.
 
+![Preview of Creality Hub mid-print](./docs/img/creality-hub-preview.png)
+
 ## Features
 
 - Monitor print progress
@@ -13,6 +15,7 @@ A self-hostable web UI for Creality 3D printers.
 - Print history
 - View camera feed
 - Nozzle, bed, and chamber temperatures
+- Material-aware chamber temperature warnings
 - Pause/resume/stop prints
 - Toggle built-in chamber light
 - [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) support

@@ -5,6 +5,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { PrinterSettingsProvider } from "@/context/printer-settings";
 import { useState } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,16 +17,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: false,
           },
         },
-      }),
+      })
   );
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PrinterSettingsProvider>
-        <ServiceWorkerRegistration />
-        {children}
-        <InstallPrompt />
-      </PrinterSettingsProvider>
+      <TooltipProvider>
+        <PrinterSettingsProvider>
+          <ServiceWorkerRegistration />
+          {children}
+          <InstallPrompt />
+        </PrinterSettingsProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

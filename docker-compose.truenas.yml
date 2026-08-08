@@ -18,6 +18,7 @@
 services:
   creality-hub:
     image: ghcr.io/connordoman/creality-hub:latest
+    pull_policy: always
     container_name: creality-hub
     restart: unless-stopped
     ports:

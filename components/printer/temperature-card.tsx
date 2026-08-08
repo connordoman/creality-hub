@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useHeaterPhases } from "@/hooks/use-heater-phases";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatTemperature } from "@/lib/temperature";
 import type { HeaterPhase, PrinterTelemetry } from "@/lib/creality/types";
 import {
@@ -17,15 +10,17 @@ import {
   FlameIcon,
   SnowflakeIcon,
   ThermometerIcon,
-  ThermometerSnowflakeIcon,
+  TriangleAlertIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  CHAMBER_TEMPERATURE_WARNING_DELTA,
   ChamberTempEvaluation,
-  ChamberTempStatus,
   evaluateChamberTemperature,
+  FilamentType,
 } from "@/lib/gcode/temperature";
-import { NoHandIcon } from "../ui/icons/no-hand-icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { HotSurfaceIcon } from "../ui/icons/hot-surface-icon";
 
 export type { HeaterPhase };
 
@@ -45,27 +40,77 @@ export function PhaseIcon({ phase }: PhaseIconProps) {
 }
 
 interface ChamberTemperatureIconProps {
-  status: ChamberTempStatus | undefined;
+  evaluation: ChamberTempEvaluation | null;
 }
 
 export function ChamberTemperatureIcon({
-  status,
+  evaluation,
 }: ChamberTemperatureIconProps) {
-  if (!status) {
+  if (!evaluation) {
     return null;
   }
 
-  switch (status) {
+  let content = null;
+  let info = null;
+
+  switch (evaluation.status) {
     case "cold":
-      return <SnowflakeIcon className="size-3 text-sky-500" />;
+      content = <SnowflakeIcon className="size-3.5 text-sky-500" />;
+      info = (
+        <p>
+          <strong>CHAMBER TOO COLD</strong>
+          <br />
+          The chamber is <strong>{evaluation.diff}°C</strong> below the
+          recommended temperature of{" "}
+          <strong>{evaluation.chamberTemperature.low}°C</strong> for{" "}
+          <strong>{evaluation.filamentType}</strong>
+        </p>
+      );
+      break;
     case "warning":
-      return <AlertTriangleIcon className="size-3 text-yellow-500" />;
+      content = <AlertTriangleIcon className="size-3.5 text-yellow-500" />;
+      info = (
+        <p>
+          <strong>CHAMBER HOT</strong>
+          <br />
+          The chamber is within{" "}
+          <strong>{CHAMBER_TEMPERATURE_WARNING_DELTA}°C</strong> of the
+          recommended maximum temperature of{" "}
+          <strong>{evaluation.chamberTemperature.high}°C</strong> for{" "}
+          <strong>{evaluation.filamentType}</strong>.
+          <br />
+          Print problems may occur.
+        </p>
+      );
+      break;
     case "critical":
-      return <AlertCircleIcon className="size-3 text-red-500" />;
-    case "safe":
-    default:
-      return null;
+      content = <AlertCircleIcon className="size-3.5 text-red-500" />;
+      info = (
+        <p>
+          <strong>CHAMBER CRITICAL</strong>
+          <br />
+          The chamber is above the recommended maximum temperature of{" "}
+          <strong>{evaluation.chamberTemperature.high}°C</strong> for{" "}
+          <strong>{evaluation.filamentType}</strong>.
+          <br />
+          {
+            "Print problems are likely to occur. Remove the printer's lid or otherwise ventilate the chamber."
+          }
+        </p>
+      );
+      break;
   }
+
+  if (!content) {
+    return null;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger>{content}</TooltipTrigger>
+      <TooltipContent>{info}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 interface TempBlockProps {
@@ -95,17 +140,29 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
         <PhaseIcon phase={derivedPhase} />
       </header>
       <div>
-        <div className="flex items-center gap-1.5">
-          <p className="mt-1 text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
+        <div className="flex items-center gap-1.5 mt-1">
+          <p className="text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
             {formatTemperature(current)}
           </p>
           {mayRiskInjury ? (
-            <NoHandIcon
-              size="default"
-              className="text-orange-500 mt-1"
-              slashed={true}
-              slashedColor="oklch(0.705 0.213 47.604)"
-            />
+            // <NoHandIcon
+            //   size="default"
+            //   className="text-orange-500 mt-1"
+            //   slashed={true}
+            //   slashedColor="oklch(0.705 0.213 47.604)"
+            // />
+            <Tooltip>
+              <TooltipTrigger>
+                <HotSurfaceIcon className="size-3.5 inline text-red-600" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  <strong>CAUTION: BURN HAZARD</strong>
+                  <br />
+                  Surface above 60°C.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground">
@@ -147,7 +204,7 @@ export function ChamberTempBlock({
     >
       <header className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <ChamberTemperatureIcon status={evaluation?.status} />
+        <ChamberTemperatureIcon evaluation={evaluation} />
       </header>
       <div>
         <p className="mt-1 text-lg font-medium">{formatTemperature(current)}</p>
@@ -171,7 +228,7 @@ export function TemperatureCard({
   filamentType,
 }: TemperatureCardProps) {
   const chamberTemperatureEvaluation = evaluateChamberTemperature(
-    filamentType,
+    filamentType as FilamentType | null,
     telemetry.boxTemp
   );
 

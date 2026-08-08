@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/context/providers";
@@ -8,16 +8,6 @@ import { Toaster } from "@/components/ui/sonner";
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -57,12 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(
-        "dark h-full antialiased font-sans",
-        geistSans.variable,
-        geistMono.variable,
-        ibmPlexSans.variable
-      )}
+      className={cn("dark h-full antialiased font-sans", ibmPlexSans.variable)}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

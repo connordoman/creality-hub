@@ -1,9 +1,20 @@
+export const FILAMENT_TYPES = [
+  "PLA",
+  "TPU",
+  "PETG",
+  "PCTG",
+  "ABS",
+  "ASA",
+] as const;
+
+export type FilamentType = (typeof FILAMENT_TYPES)[number];
+
 export interface ChamberTemperature {
   low: number;
   high: number;
 }
 
-export const CHAMBER_TEMPERATURES: Record<string, ChamberTemperature> = {
+export const CHAMBER_TEMPERATURES: Record<FilamentType, ChamberTemperature> = {
   PLA: {
     low: 15,
     high: 40,
@@ -32,44 +43,65 @@ export const CHAMBER_TEMPERATURES: Record<string, ChamberTemperature> = {
 
 export type ChamberTempStatus = "cold" | "safe" | "warning" | "critical";
 
+export const CHAMBER_TEMPERATURE_WARNING_DELTA = 5;
+
 export interface ChamberTempEvaluation {
   status: ChamberTempStatus;
   diff: number;
+  filamentType: FilamentType | null;
+  chamberTemperature: ChamberTemperature;
 }
 
 export function evaluateChamberTemperature(
-  filamentType: string | null,
+  filamentType: FilamentType | null,
   temperature: number | undefined
 ): ChamberTempEvaluation | null {
   if (!filamentType || !temperature) {
     return null;
   }
 
-  const chamberTemperature = CHAMBER_TEMPERATURES[filamentType.toUpperCase()];
+  const chamberTemperature = CHAMBER_TEMPERATURES[filamentType];
 
   if (temperature < chamberTemperature.low) {
     return {
       status: "cold",
       diff: chamberTemperature.low - temperature,
+      filamentType,
+      chamberTemperature,
     };
   }
 
   if (temperature >= chamberTemperature.high) {
     return {
       status: "critical",
-      diff: temperature - chamberTemperature.high,
+      diff:
+        temperature -
+        chamberTemperature.high +
+        CHAMBER_TEMPERATURE_WARNING_DELTA,
+      filamentType,
+      chamberTemperature,
     };
   }
 
-  if (temperature > chamberTemperature.high - 5) {
+  if (
+    temperature >
+    chamberTemperature.high - CHAMBER_TEMPERATURE_WARNING_DELTA
+  ) {
     return {
       status: "warning",
-      diff: temperature - chamberTemperature.high + 5,
+      diff:
+        temperature -
+        chamberTemperature.high +
+        CHAMBER_TEMPERATURE_WARNING_DELTA,
+      filamentType,
+      chamberTemperature,
     };
   }
 
   return {
     status: "safe",
     diff: 0,
+    filamentType,
+    chamberTemperature,
   };
 }
