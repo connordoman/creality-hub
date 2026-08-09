@@ -19,10 +19,12 @@ import {
 } from "../../ui/card";
 import { ButtonGroup } from "../../ui/button-group";
 import { Button } from "../../ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PrinterCommandContext } from "@/hooks/use-printer-command";
 import type { PrinterTelemetry } from "@/lib/creality/types";
+import { usePrinterSettings } from "@/context/printer-settings";
+import { DEFAULT_MOTOR_STEP_SIZES } from "@/lib/settings/validation";
 import {
   buildHomeParams,
   buildJogParams,
@@ -45,10 +47,6 @@ import { XYControls } from "./xy-controls";
 import { ZControls } from "./z-controls";
 import { PrintCoordinates } from "./print-coordinates";
 
-const STEP_SIZES = [1, 5, 10, 50] as const;
-
-type StepSize = (typeof STEP_SIZES)[number];
-
 interface MotorControlsProps {
   telemetry: PrinterTelemetry;
   commandContext: PrinterCommandContext;
@@ -62,7 +60,19 @@ export default function MotorControls({
   isConnected,
   className,
 }: MotorControlsProps) {
-  const [stepSize, setStepSize] = useState<StepSize>(1);
+  const { motorStepSizes } = usePrinterSettings();
+  const stepSizes = useMemo(
+    () => motorStepSizes ?? [...DEFAULT_MOTOR_STEP_SIZES],
+    [motorStepSizes],
+  );
+  const [stepSize, setStepSize] = useState(stepSizes[0]);
+
+  useEffect(() => {
+    setStepSize((current) =>
+      stepSizes.includes(current) ? current : stepSizes[0],
+    );
+  }, [stepSizes]);
+
   const isHydrated = useIsHydrated();
 
   const homed = useMemo(
@@ -96,10 +106,10 @@ export default function MotorControls({
       <CardContent className="flex justify-center">
         <div className="flex flex-col max-w-xs justify-center w-full">
           <ValueToggle
-            items={STEP_SIZES}
+            items={stepSizes}
             value={stepSize}
             unit="mm"
-            onChange={(value) => setStepSize(value as StepSize)}
+            onChange={setStepSize}
           />
           <div className="flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
             <div className="w-1/2 flex flex-col items-center">

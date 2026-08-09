@@ -5,11 +5,15 @@ import path from "node:path";
 
 import type { AppSettings } from "./types";
 import {
+  DEFAULT_MOTOR_STEP_SIZES,
   DEFAULT_PRINTER_NAME,
+  isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeMotorStepSizes,
   normalizePrinterHost,
   normalizePrinterName,
+  parseMotorStepSizes,
 } from "./validation";
 
 const SETTINGS_FILENAME = "settings.json";
@@ -34,10 +38,26 @@ function getDefaultPrinterName(): string {
   return DEFAULT_PRINTER_NAME;
 }
 
+function getDefaultMotorStepSizes(): number[] {
+  const fromEnv =
+    process.env.MOTOR_STEP_SIZES ?? process.env.NEXT_PUBLIC_MOTOR_STEP_SIZES;
+
+  if (fromEnv) {
+    const parsed = normalizeMotorStepSizes(parseMotorStepSizes(fromEnv));
+
+    if (isValidMotorStepSizes(parsed)) {
+      return parsed;
+    }
+  }
+
+  return [...DEFAULT_MOTOR_STEP_SIZES];
+}
+
 function getDefaultSettings(): AppSettings {
   return {
     printerHost: getDefaultPrinterHost(),
     printerName: getDefaultPrinterName(),
+    motorStepSizes: getDefaultMotorStepSizes(),
   };
 }
 
@@ -51,8 +71,13 @@ export async function readSettings(): Promise<AppSettings> {
       parsed.printerName ?? defaults.printerName,
     );
 
+    const motorStepSizesRaw = parsed.motorStepSizes ?? defaults.motorStepSizes;
+    const motorStepSizes = isValidMotorStepSizes(motorStepSizesRaw)
+      ? normalizeMotorStepSizes(motorStepSizesRaw)
+      : defaults.motorStepSizes;
+
     if (isValidPrinterHost(printerHost) && isValidPrinterName(printerName)) {
-      return { printerHost, printerName };
+      return { printerHost, printerName, motorStepSizes };
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
@@ -73,6 +98,9 @@ export async function writeSettings(
   const printerName = normalizePrinterName(
     updates.printerName ?? existing.printerName,
   );
+  const motorStepSizes = normalizeMotorStepSizes(
+    updates.motorStepSizes ?? existing.motorStepSizes,
+  );
 
   if (!isValidPrinterHost(printerHost)) {
     throw new Error("Invalid printer host");
@@ -82,7 +110,15 @@ export async function writeSettings(
     throw new Error("Invalid printer name");
   }
 
-  const normalized: AppSettings = { printerHost, printerName };
+  if (!isValidMotorStepSizes(motorStepSizes)) {
+    throw new Error("Invalid motor step sizes");
+  }
+
+  const normalized: AppSettings = {
+    printerHost,
+    printerName,
+    motorStepSizes,
+  };
   const dataDir = getDataDir();
   await fs.mkdir(dataDir, { recursive: true });
   await fs.writeFile(

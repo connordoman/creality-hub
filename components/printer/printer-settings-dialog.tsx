@@ -14,19 +14,24 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { usePrinterSettings } from "@/context/printer-settings";
 import {
+  formatMotorStepSizes,
+  isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeMotorStepSizes,
+  parseMotorStepSizes,
 } from "@/lib/settings/validation";
 import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { Input } from "../ui/input";
 
 export function PrinterSettingsDialog() {
-  const { printerHost, printerName, isSaving, saveError, updateSettings } =
+  const { printerHost, printerName, motorStepSizes, isSaving, saveError, updateSettings } =
     usePrinterSettings();
   const [open, setOpen] = useState(false);
   const [draftHost, setDraftHost] = useState("");
   const [draftName, setDraftName] = useState("");
+  const [draftStepSizes, setDraftStepSizes] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -35,6 +40,9 @@ export function PrinterSettingsDialog() {
     if (nextOpen) {
       setDraftHost(printerHost ?? "");
       setDraftName(printerName ?? "");
+      setDraftStepSizes(
+        motorStepSizes ? formatMotorStepSizes(motorStepSizes) : "",
+      );
       setValidationError(null);
     }
   };
@@ -50,12 +58,24 @@ export function PrinterSettingsDialog() {
       return;
     }
 
+    const normalizedStepSizes = normalizeMotorStepSizes(
+      parseMotorStepSizes(draftStepSizes),
+    );
+
+    if (!isValidMotorStepSizes(normalizedStepSizes)) {
+      setValidationError(
+        "Enter 1-8 comma-separated step sizes between 0.01 and 1000 mm",
+      );
+      return;
+    }
+
     setValidationError(null);
 
     try {
       await updateSettings({
         printerHost: draftHost.trim(),
         printerName: draftName.trim(),
+        motorStepSizes: normalizedStepSizes,
       });
       setOpen(false);
     } catch {
@@ -78,8 +98,8 @@ export function PrinterSettingsDialog() {
         <DialogHeader>
           <DialogTitle>Printer settings</DialogTitle>
           <DialogDescription>
-            Saved on the server and shared across all devices. Update the name
-            or IP address when your printer changes.
+            Saved on the server and shared across all devices. Update the name,
+            IP address, or motor jog step sizes when your setup changes.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,6 +133,23 @@ export function PrinterSettingsDialog() {
               disabled={isSaving}
               placeholder="10.0.0.184"
               onChange={(event) => setDraftHost(event.target.value)}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="motor-step-sizes">
+              Motor step sizes (mm)
+            </FieldLabel>
+            <Input
+              id="motor-step-sizes"
+              name="motor-step-sizes"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              value={draftStepSizes}
+              disabled={isSaving}
+              placeholder="1, 5, 10, 50"
+              onChange={(event) => setDraftStepSizes(event.target.value)}
             />
           </Field>
 

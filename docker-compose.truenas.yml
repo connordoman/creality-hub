@@ -27,5 +27,7 @@ services:
       CREALITY_HUB_DATA_DIR: /data
       # Default printer IP until changed in the app settings UI
       PRINTER_HOST: 192.168.1.2
+      # Comma-separated jog step sizes shown in Motor Controls (mm)
+      MOTOR_STEP_SIZES: "1,5,10,50"
     volumes:
       - /mnt/tank/apps/creality-hub/data:/data

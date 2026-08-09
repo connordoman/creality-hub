@@ -13,6 +13,8 @@ services:
     environment:
       CREALITY_HUB_DATA_DIR: /data
       PRINTER_HOST: 10.0.0.184
+      # Comma-separated jog step sizes shown in Motor Controls (mm)
+      MOTOR_STEP_SIZES: "1,5,10,50"
     volumes:
       - creality-hub-data:/data
 
