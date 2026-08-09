@@ -45,7 +45,7 @@ import { XYControls } from "./xy-controls";
 import { ZControls } from "./z-controls";
 import { PrintCoordinates } from "./print-coordinates";
 
-const STEP_SIZES = [1, 10, 50] as const;
+const STEP_SIZES = [1, 5, 10, 50] as const;
 
 type StepSize = (typeof STEP_SIZES)[number];
 
@@ -96,13 +96,13 @@ export default function MotorControls({
       <CardContent className="flex justify-center">
         <div className="flex flex-col max-w-xs justify-center w-full">
           <ValueToggle
-            items={STEP_SIZES as unknown as number[]}
+            items={STEP_SIZES}
             value={stepSize}
             unit="mm"
             onChange={(value) => setStepSize(value as StepSize)}
           />
           <div className="flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
-            <div className="w-2/3 flex flex-col items-center">
+            <div className="w-1/2 flex flex-col items-center">
               <XYControls
                 jogDisabled={xyJogDisabled}
                 homeDisabled={controlsDisabled}
@@ -112,7 +112,7 @@ export default function MotorControls({
               />
             </div>
 
-            <div className="w-1/3 flex flex-col items-center">
+            <div className="w-1/2 flex flex-col items-center">
               <ZControls
                 jogDisabled={zJogDisabled}
                 homeDisabled={controlsDisabled}

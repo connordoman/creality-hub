@@ -5,7 +5,7 @@ import { Button } from "./button";
 import { ButtonGroup } from "./button-group";
 
 interface ValueToggleProps<T extends string | number> {
-  items: T[];
+  items: T[] | readonly T[];
   value: T;
   unit: string;
   className?: string;
