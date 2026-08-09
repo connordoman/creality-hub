@@ -112,7 +112,7 @@ export function Dashboard() {
         <MotorControls
           telemetry={telemetry}
           commandContext={commandContext}
-          enabled={isConnected && status === "idle"}
+          isConnected={isConnected}
           className="col-span-1"
         />
       </div>

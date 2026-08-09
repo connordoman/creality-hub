@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { HouseIcon, LayerArrowDownIcon, LayerArrowUpIcon } from "lucide-react";
 
 interface ZControlsProps {
-  disabled: boolean;
+  jogDisabled: boolean;
+  homeDisabled: boolean;
   stepSize?: number;
   className?: string;
   onJog: (axis: JogAxis, direction: JogDirection) => void;
@@ -14,7 +15,8 @@ interface ZControlsProps {
 }
 
 export function ZControls({
-  disabled,
+  jogDisabled,
+  homeDisabled,
   stepSize,
   className,
   onJog,
@@ -25,7 +27,7 @@ export function ZControls({
       <Button
         variant="outline"
         size="icon-lg"
-        disabled={disabled}
+        disabled={jogDisabled}
         onClick={() => onJog("z", 1)}
         aria-label={`Move Z axis up ${stepSize} mm`}
         className="relative -bottom-px border-b-0"
@@ -35,7 +37,7 @@ export function ZControls({
       <Button
         variant="outline"
         size="icon-lg"
-        disabled={disabled}
+        disabled={homeDisabled}
         onClick={() => onHome()}
         aria-label="Home Z axis"
       >
@@ -49,7 +51,7 @@ export function ZControls({
       <Button
         variant="outline"
         size="icon-lg"
-        disabled={disabled}
+        disabled={jogDisabled}
         onClick={() => onJog("z", -1)}
         aria-label={`Move Z axis down ${stepSize} mm`}
         className="relative -top-px border-t-0"

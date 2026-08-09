@@ -17,7 +17,13 @@ export function buildJogGcode(
   const distance = stepMm * direction;
   const axisLetter = axis.toUpperCase();
 
-  return `G91 G1 ${axisLetter}${formatGcodeDistance(distance)} F${JOG_FEEDRATE_MM_MIN} G90`;
+  // Creality's gcodeCmd handler only accepts one command per line. A single
+  // "G91 G1 … G90" string is acknowledged but never moves the toolhead.
+  return [
+    "G91",
+    `G1 ${axisLetter}${formatGcodeDistance(distance)} F${JOG_FEEDRATE_MM_MIN}`,
+    "G90",
+  ].join("\n");
 }
 
 export function buildJogParams(
@@ -34,6 +40,11 @@ export function buildHomeParams(axes: HomeAxes): Record<string, string> {
   return {
     autohome: axes === "xy" ? "X Y" : "Z",
   };
+}
+
+/** Creality reports `deviceState: 0` when manual moves/homing are allowed. */
+export function canMotorControl(telemetry: { deviceState?: number }): boolean {
+  return telemetry.deviceState === 0;
 }
 
 export function isHoming(telemetry: { deviceState?: number }): boolean {

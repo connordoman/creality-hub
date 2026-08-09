@@ -26,6 +26,7 @@ import type { PrinterTelemetry } from "@/lib/creality/types";
 import {
   buildHomeParams,
   buildJogParams,
+  canMotorControl,
   isHoming,
   type HomeAxes,
   type JogAxis,
@@ -51,14 +52,14 @@ type StepSize = (typeof STEP_SIZES)[number];
 interface MotorControlsProps {
   telemetry: PrinterTelemetry;
   commandContext: PrinterCommandContext;
-  enabled?: boolean;
+  isConnected: boolean;
   className?: string;
 }
 
 export default function MotorControls({
   telemetry,
   commandContext,
-  enabled = true,
+  isConnected,
   className,
 }: MotorControlsProps) {
   const [stepSize, setStepSize] = useState<StepSize>(1);
@@ -68,7 +69,11 @@ export default function MotorControls({
     () => parseAutohomeStatus(telemetry.autohome),
     [telemetry.autohome],
   );
-  const controlsDisabled = !isHydrated || !enabled || isHoming(telemetry);
+  const controlsDisabled =
+    !isHydrated ||
+    !isConnected ||
+    !canMotorControl(telemetry) ||
+    isHoming(telemetry);
   const xyJogDisabled = controlsDisabled || !canJogXY(homed);
   const zJogDisabled = controlsDisabled || !canJogZ(homed);
 
@@ -99,7 +104,8 @@ export default function MotorControls({
           <div className="flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
             <div className="w-2/3 flex flex-col items-center">
               <XYControls
-                disabled={xyJogDisabled}
+                jogDisabled={xyJogDisabled}
+                homeDisabled={controlsDisabled}
                 stepSize={stepSize}
                 onJog={jog}
                 onHome={() => home("xy")}
@@ -108,7 +114,8 @@ export default function MotorControls({
 
             <div className="w-1/3 flex flex-col items-center">
               <ZControls
-                disabled={zJogDisabled}
+                jogDisabled={zJogDisabled}
+                homeDisabled={controlsDisabled}
                 stepSize={stepSize}
                 onJog={jog}
                 onHome={() => home("z")}
