@@ -16,7 +16,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { formatFileName } from "@/lib/fs";
-import MotorControls from "./motor-controls";
+import MotorControls from "./motor-controls/motor-controls";
+import { Separator } from "../ui/separator";
 
 export function Dashboard() {
   const [cameraMaximized, setCameraMaximized] = useState(false);
@@ -80,14 +81,17 @@ export function Dashboard() {
 
       <div
         className={cn(
-          "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
+          "flex flex-col lg:grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
           cameraMaximized ? "flex flex-col" : "",
         )}
       >
         <CameraViewer
-          className="row-span-2 col-start-1 lg:col-start-2 lg:row-start-1"
+          className="row-span-2 col-start-1 lg:col-span-1 lg:col-start-2 lg:row-start-1"
           maximized={cameraMaximized}
           onMaximize={() => setCameraMaximized(!cameraMaximized)}
+          telemetry={telemetry}
+          commandContext={commandContext}
+          isConnected={isConnected}
         />
         <StatusCard
           status={status}
@@ -100,21 +104,21 @@ export function Dashboard() {
           filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
         />
 
-        <PrintControls status={status} onCommand={sendCommand} />
+        <PrintControls
+          status={status}
+          onCommand={sendCommand}
+          className="self-start"
+        />
 
         <MotorControls
           telemetry={telemetry}
           commandContext={commandContext}
           enabled={isConnected && status === "idle"}
-          className="row-span-2"
-        />
-
-        <PrinterOptions
-          telemetry={telemetry}
-          commandContext={commandContext}
-          isConnected={isConnected}
+          className="col-span-1"
         />
       </div>
+
+      <Separator />
 
       <PrintHistory />
     </div>

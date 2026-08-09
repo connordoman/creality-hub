@@ -162,7 +162,7 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
                 <p>
                   <strong>CAUTION: BURN HAZARD</strong>
                   <br />
-                  Surface above 60°C.
+                  Surface is above 60°C
                 </p>
               </TooltipContent>
             </Tooltip>

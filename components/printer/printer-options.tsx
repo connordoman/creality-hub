@@ -21,7 +21,7 @@ export function PrinterOptions({
   className,
 }: PrinterOptionsProps) {
   return (
-    <Card className={cn("flex-1", className)}>
+    <Card className={cn("", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <WrenchIcon className="size-4" /> Printer Options
