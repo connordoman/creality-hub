@@ -36,7 +36,7 @@ export function XYControls({
       <Button
         variant="outline"
         size="icon-lg"
-        className="col-start-2 row-start-1"
+        className="col-start-2 row-start-1 relative -bottom-px border-b-0"
         disabled={disabled}
         onClick={() => onJog("y", 1)}
         aria-label={`Move Y axis forward ${stepSize} mm`}
@@ -46,7 +46,7 @@ export function XYControls({
       <Button
         variant="outline"
         size="icon-lg"
-        className="col-start-1 row-start-2"
+        className="col-start-1 row-start-2 relative -right-px border-r-0"
         disabled={disabled}
         onClick={() => onJog("x", -1)}
         aria-label={`Move X axis left ${stepSize} mm`}
@@ -71,7 +71,7 @@ export function XYControls({
       <Button
         variant="outline"
         size="icon-lg"
-        className="col-start-3 row-start-2"
+        className="col-start-3 row-start-2 relative -left-px border-l-0"
         disabled={disabled}
         onClick={() => onJog("x", 1)}
         aria-label={`Move X axis right ${stepSize} mm`}
@@ -81,7 +81,7 @@ export function XYControls({
       <Button
         variant="outline"
         size="icon-lg"
-        className="col-start-2 row-start-3"
+        className="col-start-2 row-start-3 relative -top-px border-t-0"
         disabled={disabled}
         onClick={() => onJog("y", -1)}
         aria-label={`Move Y axis back ${stepSize} mm`}

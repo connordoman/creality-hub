@@ -28,6 +28,7 @@ export function ZControls({
         disabled={disabled}
         onClick={() => onJog("z", 1)}
         aria-label={`Move Z axis up ${stepSize} mm`}
+        className="relative -bottom-px border-b-0"
       >
         <LayerArrowUpIcon />
       </Button>
@@ -51,6 +52,7 @@ export function ZControls({
         disabled={disabled}
         onClick={() => onJog("z", -1)}
         aria-label={`Move Z axis down ${stepSize} mm`}
+        className="relative -top-px border-t-0"
       >
         <LayerArrowDownIcon />
       </Button>

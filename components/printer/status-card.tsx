@@ -165,7 +165,7 @@ export function StatusCard({
     : "\u2014";
 
   return (
-    <Card className={cn("flex-1 flex", className)}>
+    <Card className={cn("flex-1 flex h-full", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 flex-wrap">
           <PrinterIcon className="size-4 shrink-0" />
@@ -209,7 +209,7 @@ export function StatusCard({
             <span>
               <ClockIcon className="size-3 inline-block mr-1 mb-0.5" />
               {isLivePrint
-                ? formatDuration(elapsedSeconds + remainingSeconds, false, true)
+                ? formatDuration(elapsedSeconds + remainingSeconds)
                 : "\u2014"}
             </span>
             <br />

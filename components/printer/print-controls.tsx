@@ -58,14 +58,14 @@ export function PrintControls({
     status === "printing" || status === "paused" || status === "self-testing";
 
   return (
-    <Card className={cn("flex-1 w-full", className)}>
+    <Card className={cn("flex-1 w-full h-full", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ToggleRightIcon className="size-4" />
           Print Controls
         </CardTitle>
       </CardHeader>
-      <CardContent className="@container flex gap-2 items-start flex-1">
+      <CardContent className="@container flex gap-2 items-end flex-1">
         <Button
           variant="outline"
           disabled={!isHydrated || !canPause}

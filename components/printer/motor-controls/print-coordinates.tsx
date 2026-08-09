@@ -22,20 +22,20 @@ export function PrintCoordinates({
   return (
     <div
       className={cn(
-        "grid grid-cols-3 items-center justify-items-center gap-4 text-sm whitespace-nowrap w-full max-w-md",
+        "grid grid-cols-3 items-center justify-items-center  text-sm whitespace-nowrap w-full",
         className,
       )}
     >
       <p>
-        <strong className="mr-2">X</strong>
+        <strong className="mr-3">X</strong>
         {formatAxisPosition(position.x)}
       </p>
       <p>
-        <strong className="mr-2">Y</strong>
+        <strong className="mr-3">Y</strong>
         {formatAxisPosition(position.y)}
       </p>
       <p>
-        <strong className="mr-2">Z</strong>
+        <strong className="mr-3">Z</strong>
         {formatAxisPosition(position.z)}
       </p>
     </div>

@@ -137,7 +137,7 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
   return (
     <div
       data-phase={derivedPhase}
-      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3 flex flex-col justify-between"
+      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3 flex flex-col justify-between aspect-square"
     >
       <header className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{label}</p>
@@ -200,7 +200,7 @@ export function ChamberTempBlock({
   return (
     <div
       data-evaluation={evaluation}
-      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3 flex flex-col justify-between"
+      className="group/heat rounded-none border border-border/60 bg-muted/20 p-3 flex flex-col justify-between aspect-square"
     >
       <header className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{label}</p>
@@ -244,7 +244,7 @@ export function TemperatureCard({
           Temperatures
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-3 grid-cols-3 flex-1">
+      <CardContent className="grid gap-3 grid-cols-3 flex-1 items-end">
         <TempBlock
           label="Nozzle"
           current={telemetry.nozzleTemp}

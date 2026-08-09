@@ -99,15 +99,14 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
-        <TemperatureCard
-          telemetry={telemetry}
-          filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
-        />
-
         <PrintControls
           status={status}
           onCommand={sendCommand}
           className="self-start"
+        />
+        <TemperatureCard
+          telemetry={telemetry}
+          filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
         />
 
         <MotorControls
