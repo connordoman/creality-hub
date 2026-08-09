@@ -8,6 +8,7 @@ const DEFAULT_CONFIRMATION_TIMEOUT_MS = 15_000;
 
 export interface PrinterCommandContext {
   sendCommand: (command: PrinterCommand) => void;
+  sendSetParams: (params: Record<string, unknown>) => void;
   getTelemetry: () => PrinterTelemetry;
   subscribeTelemetry: (
     listener: (telemetry: PrinterTelemetry) => void,

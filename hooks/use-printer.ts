@@ -128,6 +128,10 @@ export function usePrinter(host: string | undefined) {
     clientRef.current?.sendCommand(command);
   }, []);
 
+  const sendSetParams = useCallback((params: Record<string, unknown>) => {
+    clientRef.current?.sendSetParams(params);
+  }, []);
+
   const subscribeTelemetry = useCallback(
     (listener: (telemetry: PrinterTelemetry) => void) => {
       telemetryListenersRef.current.add(listener);
@@ -141,12 +145,13 @@ export function usePrinter(host: string | undefined) {
   const commandContext = useMemo<PrinterCommandContext>(
     () => ({
       sendCommand,
+      sendSetParams,
       getTelemetry: () => serverTelemetryRef.current,
       subscribeTelemetry,
       applyOptimisticPatch: (patch) => setOptimisticPatch(patch),
       clearOptimisticPatch: () => setOptimisticPatch(null),
     }),
-    [sendCommand, subscribeTelemetry]
+    [sendCommand, sendSetParams, subscribeTelemetry]
   );
 
   const elapsed = formatDuration(telemetry.printJobTime);

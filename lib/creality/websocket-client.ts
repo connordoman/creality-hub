@@ -94,10 +94,10 @@ export class CrealityWebSocketClient {
   sendCommand(command: PrinterCommand): void {
     switch (command) {
       case "pause":
-        this.sendSet({ pause: 1 });
+        this.sendSetParams({ pause: 1 });
         break;
       case "resume":
-        this.sendSet({ pause: 0 });
+        this.sendSetParams({ pause: 0 });
         break;
       case "stop":
         this.sendSet({ stop: 1 });
@@ -109,6 +109,10 @@ export class CrealityWebSocketClient {
         this.sendSet({ lightSw: 0 });
         break;
     }
+  }
+
+  sendSetParams(params: Record<string, unknown>): void {
+    this.sendJson({ method: "set", params });
   }
 
   private connect(): void {
@@ -196,7 +200,7 @@ export class CrealityWebSocketClient {
   }
 
   private sendSet(params: Record<string, number>): void {
-    this.sendJson({ method: "set", params });
+    this.sendSetParams(params);
   }
 
   private sendJson(payload: Record<string, unknown>): void {

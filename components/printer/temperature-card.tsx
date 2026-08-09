@@ -84,12 +84,16 @@ export function ChamberTemperatureIcon({
       );
       break;
     case "critical":
-      content = <AlertCircleIcon className="size-3.5 text-red-500" />;
+      content = <AlertCircleIcon className="size-3.5 text-red-600" />;
       info = (
         <p>
           <strong>CHAMBER CRITICAL</strong>
           <br />
-          The chamber is above the recommended maximum temperature of{" "}
+          The chamber is{" "}
+          <strong>
+            {evaluation.diff - CHAMBER_TEMPERATURE_WARNING_DELTA}°C
+          </strong>{" "}
+          above the recommended maximum temperature of{" "}
           <strong>{evaluation.chamberTemperature.high}°C</strong> for{" "}
           <strong>{evaluation.filamentType}</strong>.
           <br />
@@ -144,13 +148,12 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
           <p className="text-lg font-medium group-data-[phase=heating]/heat:text-orange-500 group-data-[phase=cooling]/heat:text-blue-500">
             {formatTemperature(current)}
           </p>
+        </div>
+        <div className="flex items-end gap-1 justify-between">
+          <p className="text-xs text-muted-foreground">
+            {formatTemperature(target, 0)}
+          </p>
           {mayRiskInjury ? (
-            // <NoHandIcon
-            //   size="default"
-            //   className="text-orange-500 mt-1"
-            //   slashed={true}
-            //   slashedColor="oklch(0.705 0.213 47.604)"
-            // />
             <Tooltip>
               <TooltipTrigger>
                 <HotSurfaceIcon className="size-3.5 inline text-red-600" />
@@ -165,9 +168,6 @@ export function TempBlock({ label, current, target }: TempBlockProps) {
             </Tooltip>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {formatTemperature(target, 0)}
-        </p>
       </div>
     </div>
   );
@@ -204,13 +204,17 @@ export function ChamberTempBlock({
     >
       <header className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <ChamberTemperatureIcon evaluation={evaluation} />
       </header>
       <div>
         <p className="mt-1 text-lg font-medium">{formatTemperature(current)}</p>
-        <p className="text-xs text-muted-foreground">
-          {diff != null ? `${sign}${diff?.toFixed(0)}°C` : "\u2014"}
-        </p>
+        <div className="flex items-end gap-1 justify-between">
+          <p className="text-xs text-muted-foreground">
+            {/* {diff != null ? `${sign}${diff?.toFixed(0)}°C` : "\u2014"} */}
+            {"< "}
+            {evaluation?.chamberTemperature.high}°C
+          </p>
+          <ChamberTemperatureIcon evaluation={evaluation} />
+        </div>
       </div>
     </div>
   );
@@ -229,7 +233,7 @@ export function TemperatureCard({
 }: TemperatureCardProps) {
   const chamberTemperatureEvaluation = evaluateChamberTemperature(
     filamentType as FilamentType | null,
-    telemetry.boxTemp
+    telemetry.boxTemp,
   );
 
   return (

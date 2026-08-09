@@ -25,14 +25,16 @@ export function parseDuration(duration: number): DurationParts {
 export function formatDuration(
   duration: number,
   padded: boolean = false,
-  semantic: boolean = false
+  semantic: boolean = false,
 ): string {
   const { hours, minutes, seconds } = parseDuration(duration);
 
   const parts = [];
 
+  const padding = padded ? 2 : 0;
+
   if (hours > 0) {
-    parts.push(hours.toString().padStart(2, "0"));
+    parts.push(hours.toString().padStart(padding, "0"));
   } else if (padded || parts.length > 0) {
     parts.push("00");
   }
@@ -42,7 +44,7 @@ export function formatDuration(
   }
 
   if (minutes > 0) {
-    parts.push(minutes.toString().padStart(2, "0"));
+    parts.push(minutes.toString().padStart(padding, "0"));
   } else if (padded || parts.length > 0) {
     parts.push("00");
   }
@@ -52,7 +54,7 @@ export function formatDuration(
   }
 
   if (seconds > 0) {
-    parts.push(seconds.toString().padStart(2, "0"));
+    parts.push(seconds.toString().padStart(padding, "0"));
   } else if (padded || parts.length > 0) {
     parts.push("00");
   }
@@ -92,7 +94,7 @@ export function formatDurationISO8601(duration: number): string {
 const DATE_TIME_FORMAT = "MMMM D YYYY [at] HH:mm:ss";
 
 export function formatDateTime(
-  timestamp: Date | number | null | undefined
+  timestamp: Date | number | null | undefined,
 ): string {
   if (timestamp === null || timestamp === undefined) {
     return "--";

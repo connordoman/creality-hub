@@ -66,7 +66,7 @@ export function PrintControls({
             Print Controls
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
+        <CardContent className="flex flex-wrap gap-2 items-center flex-1">
           <Button
             variant="outline"
             disabled={!isHydrated || !canPause}
