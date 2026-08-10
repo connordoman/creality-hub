@@ -6,6 +6,8 @@ A self-hostable web UI for Creality 3D printers.
 
 ![Preview of Creality Hub mid-print](./docs/img/creality-hub-preview.png)
 
+[Model featured](https://makerworld.com/en/models/3128751-self-draining-sink-caddy-detergent-sponge-holder)
+
 ## Features
 
 - Monitor print progress
