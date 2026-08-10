@@ -4,10 +4,15 @@ import {
   writeSettings,
 } from "@/lib/settings/server";
 import {
+  isValidBuildVolume,
+  isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeBuildVolume,
+  normalizeMotorStepSizes,
   normalizePrinterHost,
   normalizePrinterName,
+  parseMotorStepSizes,
 } from "@/lib/settings/validation";
 import type { UpdateAppSettingsRequest } from "@/lib/settings/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -54,7 +59,43 @@ export async function PUT(request: NextRequest) {
     }
   }
 
-  if (body.printerHost === undefined && body.printerName === undefined) {
+  if (body.motorStepSizes !== undefined) {
+    const motorStepSizes = normalizeMotorStepSizes(
+      typeof body.motorStepSizes === "string"
+        ? parseMotorStepSizes(body.motorStepSizes)
+        : body.motorStepSizes,
+    );
+
+    if (!isValidMotorStepSizes(motorStepSizes)) {
+      return NextResponse.json(
+        {
+          error:
+            "Enter 1-8 comma-separated step sizes between 0.01 and 1000 mm",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (body.buildVolume !== undefined) {
+    const buildVolume = normalizeBuildVolume(body.buildVolume);
+
+    if (!isValidBuildVolume(buildVolume)) {
+      return NextResponse.json(
+        {
+          error: "Enter build volume dimensions between 1 and 10000 mm",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (
+    body.printerHost === undefined &&
+    body.printerName === undefined &&
+    body.motorStepSizes === undefined &&
+    body.buildVolume === undefined
+  ) {
     return NextResponse.json(
       { error: "No settings to update" },
       { status: 400 },

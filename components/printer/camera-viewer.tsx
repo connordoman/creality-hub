@@ -22,6 +22,9 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Spinner } from "../ui/spinner";
 import { cn } from "@/lib/utils";
+import { ChamberLightOption } from "./options/chamber-light-option";
+import { PrinterCommandContext } from "@/hooks/use-printer-command";
+import { PrinterTelemetry } from "@/lib/creality/types";
 
 interface ActiveCameraConnection {
   client: CrealityWebRTCClient;
@@ -32,12 +35,18 @@ interface CameraViewerProps {
   maximized?: boolean;
   onMaximize?: () => void;
   className?: string;
+  telemetry: PrinterTelemetry;
+  commandContext: PrinterCommandContext;
+  isConnected: boolean;
 }
 
 export function CameraViewer({
   maximized,
   onMaximize,
   className,
+  telemetry,
+  commandContext,
+  isConnected,
 }: CameraViewerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const connectionRef = useRef<ActiveCameraConnection | null>(null);
@@ -141,7 +150,7 @@ export function CameraViewer({
       } catch (err) {
         console.error(err);
         setError(
-          err instanceof Error ? err.message : "Failed to disconnect camera"
+          err instanceof Error ? err.message : "Failed to disconnect camera",
         );
       }
     };
@@ -189,7 +198,7 @@ export function CameraViewer({
           </Alert>
         ) : null}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="items-center flex-1 justify-between">
         <Button
           variant="outline"
           size="sm"
@@ -203,6 +212,12 @@ export function CameraViewer({
           )}
           {isConnecting ? "Connecting..." : "Reconnect"}
         </Button>
+        <ChamberLightOption
+          telemetry={telemetry}
+          commandContext={commandContext}
+          disabled={!isConnected}
+          className=" gap-3 w-fit"
+        />
       </CardFooter>
     </Card>
   );

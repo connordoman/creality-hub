@@ -54,7 +54,7 @@ export interface ChamberTempEvaluation {
 
 export function evaluateChamberTemperature(
   filamentType: FilamentType | null,
-  temperature: number | undefined
+  temperature: number | undefined,
 ): ChamberTempEvaluation | null {
   if (!filamentType || !temperature) {
     return null;

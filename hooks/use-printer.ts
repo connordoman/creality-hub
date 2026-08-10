@@ -6,7 +6,11 @@ import type {
   PrinterCommand,
   PrinterTelemetry,
 } from "@/lib/creality/types";
-import { CrealityWebSocketClient } from "@/lib/creality/websocket-client";
+import {
+  acquirePrinterConnection,
+  releasePrinterConnection,
+} from "@/lib/creality/printer-connection";
+import type { CrealityWebSocketClient } from "@/lib/creality/websocket-client";
 import type { PrinterCommandContext } from "@/hooks/use-printer-command";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -57,7 +61,7 @@ export function usePrinter(host: string | undefined) {
       setOptimisticPatch(null);
     }
 
-    const client = new CrealityWebSocketClient(host);
+    const client = acquirePrinterConnection(host);
     clientRef.current = client;
 
     const handleStateChange = (telemetry: PrinterTelemetry) => {
@@ -94,7 +98,6 @@ export function usePrinter(host: string | undefined) {
     const unsubscribeConnection =
       client.onConnectionChange(handleConnectionChange);
 
-    client.start();
     const telemetry = client.getTelemetry();
     serverTelemetryRef.current = telemetry;
     setServerTelemetry(telemetry);
@@ -105,7 +108,7 @@ export function usePrinter(host: string | undefined) {
       clientRef.current = null;
       unsubscribeState();
       unsubscribeConnection();
-      client.stop();
+      releasePrinterConnection(host);
       setOptimisticPatch(null);
     };
   }, [host, notifyTelemetryListeners]);
@@ -128,6 +131,10 @@ export function usePrinter(host: string | undefined) {
     clientRef.current?.sendCommand(command);
   }, []);
 
+  const sendSetParams = useCallback((params: Record<string, unknown>) => {
+    clientRef.current?.sendSetParams(params);
+  }, []);
+
   const subscribeTelemetry = useCallback(
     (listener: (telemetry: PrinterTelemetry) => void) => {
       telemetryListenersRef.current.add(listener);
@@ -141,12 +148,13 @@ export function usePrinter(host: string | undefined) {
   const commandContext = useMemo<PrinterCommandContext>(
     () => ({
       sendCommand,
+      sendSetParams,
       getTelemetry: () => serverTelemetryRef.current,
       subscribeTelemetry,
       applyOptimisticPatch: (patch) => setOptimisticPatch(patch),
       clearOptimisticPatch: () => setOptimisticPatch(null),
     }),
-    [sendCommand, subscribeTelemetry]
+    [sendCommand, sendSetParams, subscribeTelemetry]
   );
 
   const elapsed = formatDuration(telemetry.printJobTime);

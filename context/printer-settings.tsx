@@ -24,6 +24,8 @@ import {
 interface PrinterSettingsContextValue {
   printerHost: string | undefined;
   printerName: string | undefined;
+  motorStepSizes: number[] | undefined;
+  buildVolume: AppSettings["buildVolume"] | undefined;
   isLoading: boolean;
   isSaving: boolean;
   error: Error | null;
@@ -62,6 +64,8 @@ export function PrinterSettingsProvider({ children }: { children: ReactNode }) {
     () => ({
       printerHost: settingsQuery.data?.printerHost,
       printerName: settingsQuery.data?.printerName,
+      motorStepSizes: settingsQuery.data?.motorStepSizes,
+      buildVolume: settingsQuery.data?.buildVolume,
       isLoading: settingsQuery.isLoading,
       isSaving: saveMutation.isPending,
       error: settingsQuery.error,
@@ -71,6 +75,8 @@ export function PrinterSettingsProvider({ children }: { children: ReactNode }) {
     [
       settingsQuery.data?.printerHost,
       settingsQuery.data?.printerName,
+      settingsQuery.data?.motorStepSizes,
+      settingsQuery.data?.buildVolume,
       settingsQuery.isLoading,
       settingsQuery.error,
       saveMutation.isPending,

@@ -25,6 +25,8 @@ import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { usePrintMetadata } from "@/hooks/use-print-metadata";
 import { formatFileName } from "@/lib/fs";
 import {
+  ClockIcon,
+  LayersIcon,
   PauseIcon,
   PrinterIcon,
   RulerIcon,
@@ -76,12 +78,12 @@ export function StatusCard({
   const filename = formatFileName(telemetry.printFileName);
 
   const { data: metadata } = usePrintMetadata(
-    formatFileName(telemetry.printFileName)
+    formatFileName(telemetry.printFileName),
   );
 
   const { length: expectedLength, weight: expectedWeight } = formatFilamentUsed(
     metadata?.filamentTotalMm,
-    metadata?.filamentTotalG
+    metadata?.filamentTotalG,
   );
 
   const { data: gcodeAnalysis, isLoading } = useGcodeAnalysis(filename);
@@ -90,7 +92,7 @@ export function StatusCard({
 
   const printStartTime = useMemo(
     () => getPrintStartTime(telemetry, metadata, elapsedSeconds, status),
-    [telemetry, metadata, elapsedSeconds, status]
+    [telemetry, metadata, elapsedSeconds, status],
   );
 
   const expectedCompletionTime = useMemo(
@@ -100,7 +102,7 @@ export function StatusCard({
         elapsedSeconds,
         remainingSeconds,
         metadata?.estimatedTimeSeconds ?? null,
-        status
+        status,
       ),
     [
       printStartTime,
@@ -108,7 +110,7 @@ export function StatusCard({
       remainingSeconds,
       metadata?.estimatedTimeSeconds,
       status,
-    ]
+    ],
   );
 
   const timeRange = useMemo(() => {
@@ -130,7 +132,7 @@ export function StatusCard({
     };
 
     const dateOptions: Intl.DateTimeFormatOptions = {
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -163,55 +165,60 @@ export function StatusCard({
     : "\u2014";
 
   return (
-    <Card className={cn("flex-1 flex", className)}>
+    <Card className={cn("flex-1 flex h-full", className)}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <PrinterIcon className="size-4" />
+        <CardTitle className="flex items-center gap-2 flex-wrap">
+          <PrinterIcon className="size-4 shrink-0" />
           Print Status
-          <Badge variant={statusVariant[status]} className="capitalize">
-            {status.replace("-", " ")}
-          </Badge>
-          {gcodeAnalysis?.filamentType ? (
-            <Badge variant="outline" className="capitalize">
-              {gcodeAnalysis.filamentType}
+          <div className="space-x-2">
+            <Badge variant={statusVariant[status]} className="capitalize">
+              {status.replace("-", " ")}
             </Badge>
-          ) : null}
-          {isLoading ? (
-            <Badge variant="outline">
-              <Spinner /> Analyzing...
-            </Badge>
-          ) : null}
+            {gcodeAnalysis?.filamentType ? (
+              <Badge variant="outline" className="capitalize">
+                {gcodeAnalysis.filamentType}
+              </Badge>
+            ) : null}
+            {isLoading ? (
+              <Badge variant="outline">
+                <Spinner /> Analyzing...
+              </Badge>
+            ) : null}
+          </div>
         </CardTitle>
-        <CardDescription className="break-all leading-none">
+        <CardDescription className="break-all leading-none mt-1">
           {filename || "No active print"}
         </CardDescription>
-        {isLivePrint ? (
-          <CardAction>
-            <p className="font-medium text-right">
-              <span className="flex items-center gap-2.5">
-                <span className="whitespace-nowrap">
-                  <SpoolIcon className="size-3 inline-block mr-1 mb-0.5" />
-                  {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
-                  {expectedLength?.unit ?? "m"}
-                </span>
-                <span className="whitespace-nowrap">
-                  <WeightIcon className="size-3 inline-block mr-1 mb-0.5" />
-                  {expectedWeight?.value?.toFixed(1) ?? "\u2014"}{" "}
-                  {expectedWeight?.unit}
-                </span>
-              </span>
-              <span>
-                {isLivePrint
-                  ? formatDuration(elapsedSeconds + remainingSeconds)
-                  : "\u2014"}
-              </span>
-              <br />
-              <span>{layerCount}</span>
-            </p>
-          </CardAction>
-        ) : null}
       </CardHeader>
-      <CardContent className="space-y-0 flex-1 flex flex-col justify-between">
+      <CardContent className="space-y-2 flex-1 flex flex-col justify-between">
+        <div className="flex flex-row items-center justify-between">
+          <p className="font-medium text-left">
+            <span className="whitespace-nowrap">
+              <SpoolIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
+              {expectedLength?.unit ?? "m"}
+            </span>
+            <br />
+            <span className="whitespace-nowrap">
+              <WeightIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {expectedWeight?.value?.toFixed(1) ?? "\u2014"}{" "}
+              {expectedWeight?.unit}
+            </span>
+          </p>
+          <p className="text-right">
+            <span>
+              <ClockIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {isLivePrint
+                ? formatDuration(elapsedSeconds + remainingSeconds)
+                : "\u2014"}
+            </span>
+            <br />
+            <span>
+              <LayersIcon className="size-3 inline-block mr-1 mb-0.5" />
+              {layerCount}
+            </span>
+          </p>
+        </div>
         <Field className="space-y-2">
           <FieldLabel htmlFor="print-progress">
             <span className="text-muted-foreground">Progress</span>

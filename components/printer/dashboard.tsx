@@ -16,6 +16,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { formatFileName } from "@/lib/fs";
+import MotorControls from "./motor-controls/motor-controls";
+import { Separator } from "../ui/separator";
 
 export function Dashboard() {
   const [cameraMaximized, setCameraMaximized] = useState(false);
@@ -34,7 +36,7 @@ export function Dashboard() {
   useRefetchPrintHistoryOnPrintStart(status);
 
   const { data: gcodeAnalysis } = useGcodeAnalysis(
-    formatFileName(telemetry.printFileName)
+    formatFileName(telemetry.printFileName),
   );
 
   if (isLoading) {
@@ -61,8 +63,8 @@ export function Dashboard() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
       <header className="flex gap-3 flex-row items-start justify-between">
         <div>
-          <div className="flex flex-row items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight leading-none mb-1">
+          <div className="flex flex-row items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-semibold tracking-tight leading-none mb-1 whitespace-nowrap">
               {printerName}
             </h1>
             <ConnectionBadge connected={isConnected} className="mb-1" />
@@ -79,14 +81,17 @@ export function Dashboard() {
 
       <div
         className={cn(
-          "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
-          cameraMaximized ? "flex flex-col" : ""
+          "flex flex-col lg:grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
+          cameraMaximized ? "flex flex-col" : "",
         )}
       >
         <CameraViewer
-          className="row-span-2 col-start-1 lg:col-start-2 lg:row-start-1"
+          className="row-span-2 col-start-1 lg:col-span-1 lg:col-start-2 lg:row-start-1"
           maximized={cameraMaximized}
           onMaximize={() => setCameraMaximized(!cameraMaximized)}
+          telemetry={telemetry}
+          commandContext={commandContext}
+          isConnected={isConnected}
         />
         <StatusCard
           status={status}
@@ -94,18 +99,25 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
+        <PrintControls
+          status={status}
+          onCommand={sendCommand}
+          className="self-start"
+        />
         <TemperatureCard
           telemetry={telemetry}
           filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
         />
-        <PrintControls status={status} onCommand={sendCommand} />
 
-        <PrinterOptions
+        <MotorControls
           telemetry={telemetry}
           commandContext={commandContext}
           isConnected={isConnected}
+          className="col-span-1"
         />
       </div>
+
+      <Separator />
 
       <PrintHistory />
     </div>

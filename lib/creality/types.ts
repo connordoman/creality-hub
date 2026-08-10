@@ -77,6 +77,8 @@ export interface PrinterTelemetry {
   model?: string;
   modelVersion?: string;
   webrtcSupport?: number;
+  curPosition?: string;
+  autohome?: string;
   [key: string]: unknown;
 }
 
