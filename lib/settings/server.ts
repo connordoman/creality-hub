@@ -5,14 +5,18 @@ import path from "node:path";
 
 import type { AppSettings } from "./types";
 import {
+  DEFAULT_BUILD_VOLUME,
   DEFAULT_MOTOR_STEP_SIZES,
   DEFAULT_PRINTER_NAME,
+  isValidBuildVolume,
   isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeBuildVolume,
   normalizeMotorStepSizes,
   normalizePrinterHost,
   normalizePrinterName,
+  parseBuildVolumeDimension,
   parseMotorStepSizes,
 } from "./validation";
 
@@ -53,11 +57,42 @@ function getDefaultMotorStepSizes(): number[] {
   return [...DEFAULT_MOTOR_STEP_SIZES];
 }
 
+function parseEnvBuildVolumeDimension(
+  value: string | undefined,
+  fallback: number,
+): number {
+  if (!value) {
+    return fallback;
+  }
+
+  return parseBuildVolumeDimension(value) ?? fallback;
+}
+
+function getDefaultBuildVolume() {
+  const volume = {
+    x: parseEnvBuildVolumeDimension(
+      process.env.BUILD_VOLUME_X ?? process.env.NEXT_PUBLIC_BUILD_VOLUME_X,
+      DEFAULT_BUILD_VOLUME.x,
+    ),
+    y: parseEnvBuildVolumeDimension(
+      process.env.BUILD_VOLUME_Y ?? process.env.NEXT_PUBLIC_BUILD_VOLUME_Y,
+      DEFAULT_BUILD_VOLUME.y,
+    ),
+    z: parseEnvBuildVolumeDimension(
+      process.env.BUILD_VOLUME_Z ?? process.env.NEXT_PUBLIC_BUILD_VOLUME_Z,
+      DEFAULT_BUILD_VOLUME.z,
+    ),
+  };
+
+  return isValidBuildVolume(volume) ? volume : { ...DEFAULT_BUILD_VOLUME };
+}
+
 function getDefaultSettings(): AppSettings {
   return {
     printerHost: getDefaultPrinterHost(),
     printerName: getDefaultPrinterName(),
     motorStepSizes: getDefaultMotorStepSizes(),
+    buildVolume: getDefaultBuildVolume(),
   };
 }
 
@@ -75,9 +110,12 @@ export async function readSettings(): Promise<AppSettings> {
     const motorStepSizes = isValidMotorStepSizes(motorStepSizesRaw)
       ? normalizeMotorStepSizes(motorStepSizesRaw)
       : defaults.motorStepSizes;
+    const buildVolume = isValidBuildVolume(parsed.buildVolume)
+      ? normalizeBuildVolume(parsed.buildVolume)
+      : defaults.buildVolume;
 
     if (isValidPrinterHost(printerHost) && isValidPrinterName(printerName)) {
-      return { printerHost, printerName, motorStepSizes };
+      return { printerHost, printerName, motorStepSizes, buildVolume };
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
@@ -101,6 +139,9 @@ export async function writeSettings(
   const motorStepSizes = normalizeMotorStepSizes(
     updates.motorStepSizes ?? existing.motorStepSizes,
   );
+  const buildVolume = normalizeBuildVolume(
+    updates.buildVolume ?? existing.buildVolume,
+  );
 
   if (!isValidPrinterHost(printerHost)) {
     throw new Error("Invalid printer host");
@@ -114,10 +155,15 @@ export async function writeSettings(
     throw new Error("Invalid motor step sizes");
   }
 
+  if (!isValidBuildVolume(buildVolume)) {
+    throw new Error("Invalid build volume");
+  }
+
   const normalized: AppSettings = {
     printerHost,
     printerName,
     motorStepSizes,
+    buildVolume,
   };
   const dataDir = getDataDir();
   await fs.mkdir(dataDir, { recursive: true });

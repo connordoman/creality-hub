@@ -209,9 +209,10 @@ export function ChamberTempBlock({
         <p className="mt-1 text-lg font-medium">{formatTemperature(current)}</p>
         <div className="flex items-end gap-1 justify-between">
           <p className="text-xs text-muted-foreground">
+            {evaluation?.chamberTemperature.high
+              ? `${sign}${evaluation?.chamberTemperature.high?.toFixed(0)}°C`
+              : "\u2014"}
             {/* {diff != null ? `${sign}${diff?.toFixed(0)}°C` : "\u2014"} */}
-            {"< "}
-            {evaluation?.chamberTemperature.high}°C
           </p>
           <ChamberTemperatureIcon evaluation={evaluation} />
         </div>

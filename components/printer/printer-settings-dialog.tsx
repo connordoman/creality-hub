@@ -15,9 +15,11 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { usePrinterSettings } from "@/context/printer-settings";
 import {
   formatMotorStepSizes,
+  isValidBuildVolume,
   isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeBuildVolume,
   normalizeMotorStepSizes,
   parseMotorStepSizes,
 } from "@/lib/settings/validation";
@@ -26,12 +28,15 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 
 export function PrinterSettingsDialog() {
-  const { printerHost, printerName, motorStepSizes, isSaving, saveError, updateSettings } =
+  const { printerHost, printerName, motorStepSizes, buildVolume, isSaving, saveError, updateSettings } =
     usePrinterSettings();
   const [open, setOpen] = useState(false);
   const [draftHost, setDraftHost] = useState("");
   const [draftName, setDraftName] = useState("");
   const [draftStepSizes, setDraftStepSizes] = useState("");
+  const [draftBuildVolumeX, setDraftBuildVolumeX] = useState("");
+  const [draftBuildVolumeY, setDraftBuildVolumeY] = useState("");
+  const [draftBuildVolumeZ, setDraftBuildVolumeZ] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -43,6 +48,9 @@ export function PrinterSettingsDialog() {
       setDraftStepSizes(
         motorStepSizes ? formatMotorStepSizes(motorStepSizes) : "",
       );
+      setDraftBuildVolumeX(buildVolume ? String(buildVolume.x) : "");
+      setDraftBuildVolumeY(buildVolume ? String(buildVolume.y) : "");
+      setDraftBuildVolumeZ(buildVolume ? String(buildVolume.z) : "");
       setValidationError(null);
     }
   };
@@ -69,6 +77,19 @@ export function PrinterSettingsDialog() {
       return;
     }
 
+    const normalizedBuildVolume = normalizeBuildVolume({
+      x: draftBuildVolumeX,
+      y: draftBuildVolumeY,
+      z: draftBuildVolumeZ,
+    });
+
+    if (!isValidBuildVolume(normalizedBuildVolume)) {
+      setValidationError(
+        "Enter build volume dimensions between 1 and 10000 mm",
+      );
+      return;
+    }
+
     setValidationError(null);
 
     try {
@@ -76,6 +97,7 @@ export function PrinterSettingsDialog() {
         printerHost: draftHost.trim(),
         printerName: draftName.trim(),
         motorStepSizes: normalizedStepSizes,
+        buildVolume: normalizedBuildVolume,
       });
       setOpen(false);
     } catch {
@@ -99,7 +121,8 @@ export function PrinterSettingsDialog() {
           <DialogTitle>Printer settings</DialogTitle>
           <DialogDescription>
             Saved on the server and shared across all devices. Update the name,
-            IP address, or motor jog step sizes when your setup changes.
+            IP address, motor jog step sizes, or build volume when your setup
+            changes.
           </DialogDescription>
         </DialogHeader>
 
@@ -152,6 +175,56 @@ export function PrinterSettingsDialog() {
               onChange={(event) => setDraftStepSizes(event.target.value)}
             />
           </Field>
+
+          <div className="grid grid-cols-3 gap-3">
+            <Field>
+              <FieldLabel htmlFor="build-volume-x">Build volume X (mm)</FieldLabel>
+              <Input
+                id="build-volume-x"
+                name="build-volume-x"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
+                value={draftBuildVolumeX}
+                disabled={isSaving}
+                placeholder="220"
+                onChange={(event) => setDraftBuildVolumeX(event.target.value)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="build-volume-y">Build volume Y (mm)</FieldLabel>
+              <Input
+                id="build-volume-y"
+                name="build-volume-y"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
+                value={draftBuildVolumeY}
+                disabled={isSaving}
+                placeholder="220"
+                onChange={(event) => setDraftBuildVolumeY(event.target.value)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="build-volume-z">Build volume Z (mm)</FieldLabel>
+              <Input
+                id="build-volume-z"
+                name="build-volume-z"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                spellCheck={false}
+                value={draftBuildVolumeZ}
+                disabled={isSaving}
+                placeholder="250"
+                onChange={(event) => setDraftBuildVolumeZ(event.target.value)}
+              />
+            </Field>
+          </div>
 
           {validationError ? (
             <p className="text-sm text-destructive">{validationError}</p>

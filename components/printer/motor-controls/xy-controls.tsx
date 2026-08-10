@@ -16,6 +16,7 @@ interface XYControlsProps {
   homeDisabled: boolean;
   stepSize?: number;
   className?: string;
+  isJogDisabled?: (axis: JogAxis, direction: JogDirection) => boolean;
   onJog: (axis: JogAxis, direction: JogDirection) => void;
   onHome: () => void;
 }
@@ -25,6 +26,7 @@ export function XYControls({
   homeDisabled,
   stepSize,
   className,
+  isJogDisabled,
   onJog,
   onHome,
 }: XYControlsProps) {
@@ -39,7 +41,7 @@ export function XYControls({
         variant="outline"
         size="icon-lg"
         className="col-start-2 row-start-1 relative -bottom-px border-b-0"
-        disabled={jogDisabled}
+        disabled={jogDisabled || isJogDisabled?.("y", 1)}
         onClick={() => onJog("y", 1)}
         aria-label={`Move Y axis forward ${stepSize} mm`}
       >
@@ -49,7 +51,7 @@ export function XYControls({
         variant="outline"
         size="icon-lg"
         className="col-start-1 row-start-2 relative -right-px border-r-0"
-        disabled={jogDisabled}
+        disabled={jogDisabled || isJogDisabled?.("x", -1)}
         onClick={() => onJog("x", -1)}
         aria-label={`Move X axis left ${stepSize} mm`}
       >
@@ -74,7 +76,7 @@ export function XYControls({
         variant="outline"
         size="icon-lg"
         className="col-start-3 row-start-2 relative -left-px border-l-0"
-        disabled={jogDisabled}
+        disabled={jogDisabled || isJogDisabled?.("x", 1)}
         onClick={() => onJog("x", 1)}
         aria-label={`Move X axis right ${stepSize} mm`}
       >
@@ -84,7 +86,7 @@ export function XYControls({
         variant="outline"
         size="icon-lg"
         className="col-start-2 row-start-3 relative -top-px border-t-0"
-        disabled={jogDisabled}
+        disabled={jogDisabled || isJogDisabled?.("y", -1)}
         onClick={() => onJog("y", -1)}
         aria-label={`Move Y axis back ${stepSize} mm`}
       >

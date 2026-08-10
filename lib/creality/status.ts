@@ -22,7 +22,7 @@ export function getPrintStartTime(
   telemetry: PrinterTelemetry,
   metadata: PrintFileMetadata | null | undefined,
   elapsedSeconds: number,
-  status: PrintStatus
+  status: PrintStatus,
 ): number | null {
   const fromMetadata = metadata?.printStartTime;
   if (fromMetadata != null) {
@@ -46,34 +46,49 @@ export function getExpectedCompletionTime(
   elapsedSeconds: number,
   remainingSeconds: number,
   estimatedTimeSeconds: number | null,
-  status: PrintStatus
+  status: PrintStatus,
 ): number | null {
-  if (startTime == null) {
-    if (isActivePrintStatus(status) && remainingSeconds > 0) {
-      return Math.floor(Date.now() / 1000) + remainingSeconds;
-    }
+  // Current time in seconds
+  const now = Math.floor(Date.now() / 1000);
 
+  let candidates: number[] = [];
+
+  // Candidate 1: startTime + (elapsed + remaining)
+  if (startTime != null) {
+    const liveTotal = elapsedSeconds + remainingSeconds;
+    if (isActivePrintStatus(status) && liveTotal > 0) {
+      candidates.push(startTime + liveTotal);
+    }
+    if (estimatedTimeSeconds != null && estimatedTimeSeconds > 0) {
+      candidates.push(startTime + estimatedTimeSeconds);
+    }
+    if (status === "completed" && elapsedSeconds > 0) {
+      candidates.push(startTime + elapsedSeconds);
+    }
+  } else {
+    if (isActivePrintStatus(status) && remainingSeconds > 0) {
+      candidates.push(now + remainingSeconds);
+    }
+  }
+
+  // Always consider the "now + remainingSeconds" if it's active and reasonable
+  if (isActivePrintStatus(status) && remainingSeconds > 0) {
+    candidates.push(now + remainingSeconds);
+  }
+
+  // Filter invalid
+  candidates = candidates.filter((val) => val > 0 && Number.isFinite(val));
+
+  if (candidates.length === 0) {
     return null;
   }
 
-  const liveTotal = elapsedSeconds + remainingSeconds;
-  if (isActivePrintStatus(status) && liveTotal > 0) {
-    return startTime + liveTotal;
-  }
-
-  if (estimatedTimeSeconds != null && estimatedTimeSeconds > 0) {
-    return startTime + estimatedTimeSeconds;
-  }
-
-  if (status === "completed" && elapsedSeconds > 0) {
-    return startTime + elapsedSeconds;
-  }
-
-  return null;
+  // Return the max (furthest in the future) completion time
+  return Math.max(...candidates);
 }
 
 export function coerceNumbers(
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
@@ -109,7 +124,7 @@ export function isPaused(data: PrinterTelemetry): boolean {
 
 export function derivePrintStatus(
   data: PrinterTelemetry | null,
-  connected: boolean
+  connected: boolean,
 ): PrintStatus {
   if (!connected) return "disconnected";
   if (!data) return "idle";
@@ -147,7 +162,7 @@ export function formatDuration(seconds: number | null | undefined): string {
 
   if (hours > 0) {
     return `${hours}:${String(minutes).padStart(2, "0")}:${String(
-      secs
+      secs,
     ).padStart(2, "0")}`;
   }
 
@@ -166,7 +181,7 @@ interface FilamentUsed {
 
 export function formatFilamentUsed(
   mm: number | null | undefined,
-  grams: number | null | undefined
+  grams: number | null | undefined,
 ): FilamentUsed {
   const filamentUsed: FilamentUsed = {
     length: null,
@@ -211,7 +226,7 @@ export function formatFilamentUsed(
 
 export function formatTemperature(
   value: number | null | undefined,
-  target?: number | null
+  target?: number | null,
 ): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "--";

@@ -29,5 +29,9 @@ services:
       PRINTER_HOST: 192.168.1.2
       # Comma-separated jog step sizes shown in Motor Controls (mm)
       MOTOR_STEP_SIZES: "1,5,10,50"
+      # Build volume limits for client-side jog checks (mm)
+      BUILD_VOLUME_X: "220"
+      BUILD_VOLUME_Y: "220"
+      BUILD_VOLUME_Z: "250"
     volumes:
       - /mnt/tank/apps/creality-hub/data:/data

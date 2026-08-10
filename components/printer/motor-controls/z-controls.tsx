@@ -10,6 +10,7 @@ interface ZControlsProps {
   homeDisabled: boolean;
   stepSize?: number;
   className?: string;
+  isJogDisabled?: (axis: JogAxis, direction: JogDirection) => boolean;
   onJog: (axis: JogAxis, direction: JogDirection) => void;
   onHome: () => void;
 }
@@ -19,6 +20,7 @@ export function ZControls({
   homeDisabled,
   stepSize,
   className,
+  isJogDisabled,
   onJog,
   onHome,
 }: ZControlsProps) {
@@ -27,8 +29,8 @@ export function ZControls({
       <Button
         variant="outline"
         size="icon-lg"
-        disabled={jogDisabled}
-        onClick={() => onJog("z", 1)}
+        disabled={jogDisabled || isJogDisabled?.("z", 1)}
+        onClick={() => onJog("z", -1)}
         aria-label={`Move Z axis up ${stepSize} mm`}
         className="relative -bottom-px border-b-0"
       >
@@ -51,8 +53,8 @@ export function ZControls({
       <Button
         variant="outline"
         size="icon-lg"
-        disabled={jogDisabled}
-        onClick={() => onJog("z", -1)}
+        disabled={jogDisabled || isJogDisabled?.("z", -1)}
+        onClick={() => onJog("z", 1)}
         aria-label={`Move Z axis down ${stepSize} mm`}
         className="relative -top-px border-t-0"
       >

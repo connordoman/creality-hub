@@ -1,3 +1,6 @@
+import type { BuildVolume } from "@/lib/settings/types";
+import type { JogAxis, JogDirection } from "./motor-commands";
+
 export interface AxisPosition {
   x: number | null;
   y: number | null;
@@ -76,4 +79,45 @@ export function canJogXY(homed: AxisHomedStatus): boolean {
 
 export function canJogZ(homed: AxisHomedStatus): boolean {
   return homed.z === true;
+}
+
+const MIN_JOG_DISTANCE_MM = 0.01;
+const JOG_DISTANCE_PRECISION = 100;
+
+function roundJogDistanceDown(mm: number): number {
+  return Math.floor(mm * JOG_DISTANCE_PRECISION) / JOG_DISTANCE_PRECISION;
+}
+
+export function clampJogDistance(
+  position: AxisPosition,
+  buildVolume: BuildVolume,
+  axis: JogAxis,
+  direction: JogDirection,
+  stepMm: number,
+): number | null {
+  const current = position[axis];
+
+  if (current === null) {
+    return null;
+  }
+
+  const remaining =
+    direction === 1 ? buildVolume[axis] - current : current;
+  const clamped = roundJogDistanceDown(Math.min(stepMm, remaining));
+
+  if (clamped < MIN_JOG_DISTANCE_MM) {
+    return null;
+  }
+
+  return clamped;
+}
+
+export function canJogWithinBuildVolume(
+  position: AxisPosition,
+  buildVolume: BuildVolume,
+  axis: JogAxis,
+  direction: JogDirection,
+  stepMm: number,
+): boolean {
+  return clampJogDistance(position, buildVolume, axis, direction, stepMm) !== null;
 }

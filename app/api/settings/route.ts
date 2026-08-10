@@ -4,9 +4,11 @@ import {
   writeSettings,
 } from "@/lib/settings/server";
 import {
+  isValidBuildVolume,
   isValidMotorStepSizes,
   isValidPrinterHost,
   isValidPrinterName,
+  normalizeBuildVolume,
   normalizeMotorStepSizes,
   normalizePrinterHost,
   normalizePrinterName,
@@ -75,10 +77,24 @@ export async function PUT(request: NextRequest) {
     }
   }
 
+  if (body.buildVolume !== undefined) {
+    const buildVolume = normalizeBuildVolume(body.buildVolume);
+
+    if (!isValidBuildVolume(buildVolume)) {
+      return NextResponse.json(
+        {
+          error: "Enter build volume dimensions between 1 and 10000 mm",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   if (
     body.printerHost === undefined &&
     body.printerName === undefined &&
-    body.motorStepSizes === undefined
+    body.motorStepSizes === undefined &&
+    body.buildVolume === undefined
   ) {
     return NextResponse.json(
       { error: "No settings to update" },

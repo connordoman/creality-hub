@@ -19,12 +19,15 @@ import {
 } from "../../ui/card";
 import { ButtonGroup } from "../../ui/button-group";
 import { Button } from "../../ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PrinterCommandContext } from "@/hooks/use-printer-command";
 import type { PrinterTelemetry } from "@/lib/creality/types";
 import { usePrinterSettings } from "@/context/printer-settings";
-import { DEFAULT_MOTOR_STEP_SIZES } from "@/lib/settings/validation";
+import {
+  DEFAULT_BUILD_VOLUME,
+  DEFAULT_MOTOR_STEP_SIZES,
+} from "@/lib/settings/validation";
 import {
   buildHomeParams,
   buildJogParams,
@@ -35,9 +38,10 @@ import {
   type JogDirection,
 } from "@/lib/creality/motor-commands";
 import {
+  canJogWithinBuildVolume,
   canJogXY,
   canJogZ,
-  formatAxisPosition,
+  clampJogDistance,
   parseAutohomeStatus,
   parseCurPosition,
 } from "@/lib/creality/position";
@@ -60,10 +64,14 @@ export default function MotorControls({
   isConnected,
   className,
 }: MotorControlsProps) {
-  const { motorStepSizes } = usePrinterSettings();
+  const { motorStepSizes, buildVolume } = usePrinterSettings();
   const stepSizes = useMemo(
     () => motorStepSizes ?? [...DEFAULT_MOTOR_STEP_SIZES],
     [motorStepSizes],
+  );
+  const volume = useMemo(
+    () => buildVolume ?? { ...DEFAULT_BUILD_VOLUME },
+    [buildVolume],
   );
   const [stepSize, setStepSize] = useState(stepSizes[0]);
 
@@ -79,6 +87,10 @@ export default function MotorControls({
     () => parseAutohomeStatus(telemetry.autohome),
     [telemetry.autohome],
   );
+  const position = useMemo(
+    () => parseCurPosition(telemetry.curPosition),
+    [telemetry.curPosition],
+  );
   const controlsDisabled =
     !isHydrated ||
     !isConnected ||
@@ -87,8 +99,26 @@ export default function MotorControls({
   const xyJogDisabled = controlsDisabled || !canJogXY(homed);
   const zJogDisabled = controlsDisabled || !canJogZ(homed);
 
+  const isJogDisabled = useCallback(
+    (axis: JogAxis, direction: JogDirection) =>
+      !canJogWithinBuildVolume(position, volume, axis, direction, stepSize),
+    [position, volume, stepSize],
+  );
+
   const jog = (axis: JogAxis, direction: JogDirection) => {
-    commandContext.sendSetParams(buildJogParams(axis, stepSize, direction));
+    const clampedStep = clampJogDistance(
+      position,
+      volume,
+      axis,
+      direction,
+      stepSize,
+    );
+
+    if (clampedStep === null) {
+      return;
+    }
+
+    commandContext.sendSetParams(buildJogParams(axis, clampedStep, direction));
   };
 
   const home = (axes: HomeAxes) => {
@@ -117,6 +147,7 @@ export default function MotorControls({
                 jogDisabled={xyJogDisabled}
                 homeDisabled={controlsDisabled}
                 stepSize={stepSize}
+                isJogDisabled={isJogDisabled}
                 onJog={jog}
                 onHome={() => home("xy")}
               />
@@ -127,6 +158,7 @@ export default function MotorControls({
                 jogDisabled={zJogDisabled}
                 homeDisabled={controlsDisabled}
                 stepSize={stepSize}
+                isJogDisabled={isJogDisabled}
                 onJog={jog}
                 onHome={() => home("z")}
               />
