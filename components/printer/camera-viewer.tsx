@@ -37,8 +37,19 @@ interface FullscreenCapableElement extends HTMLElement {
 
 interface FullscreenCapableDocument extends Document {
   webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
   webkitExitFullscreen?: () => Promise<void>;
 }
+
+// iOS Safari has no element-level Fullscreen API — only <video> supports
+// this non-standard native fullscreen player.
+interface IOSFullscreenVideoElement extends HTMLVideoElement {
+  webkitEnterFullscreen?: () => void;
+  webkitExitFullscreen?: () => void;
+  webkitDisplayingFullscreen?: boolean;
+}
+
+type FullscreenMode = "none" | "element" | "video";
 
 const CONTROLS_HIDE_DELAY_MS = 3000;
 
@@ -66,7 +77,7 @@ export function CameraViewer({
   const [isConnecting, setIsConnecting] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenMode, setFullscreenMode] = useState<FullscreenMode>("none");
 
   const runConnection = useCallback(async (generation: number) => {
     const previousConnection = connectionRef.current;
@@ -174,7 +185,7 @@ export function CameraViewer({
 
     const handleFullscreenChange = () => {
       const fullscreenElement = doc.fullscreenElement ?? doc.webkitFullscreenElement;
-      setIsFullscreen(fullscreenElement === viewerRef.current);
+      setFullscreenMode(fullscreenElement === viewerRef.current ? "element" : "none");
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -190,7 +201,23 @@ export function CameraViewer({
   }, []);
 
   useEffect(() => {
-    if (!isFullscreen) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleBegin = () => setFullscreenMode("video");
+    const handleEnd = () => setFullscreenMode("none");
+
+    video.addEventListener("webkitbeginfullscreen", handleBegin);
+    video.addEventListener("webkitendfullscreen", handleEnd);
+
+    return () => {
+      video.removeEventListener("webkitbeginfullscreen", handleBegin);
+      video.removeEventListener("webkitendfullscreen", handleEnd);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (fullscreenMode !== "element") return;
 
     const showControls = () => overlayRef.current?.classList.remove("opacity-0");
     const hideControls = () => overlayRef.current?.classList.add("opacity-0");
@@ -223,26 +250,40 @@ export function CameraViewer({
         hideControlsTimerRef.current = null;
       }
     };
-  }, [isFullscreen]);
+  }, [fullscreenMode]);
 
   const toggleFullscreen = useCallback(async () => {
     const doc = document as FullscreenCapableDocument;
-    const node = viewerRef.current as FullscreenCapableElement | null;
-    if (!node) return;
+    const container = viewerRef.current as FullscreenCapableElement | null;
+    const video = videoRef.current as IOSFullscreenVideoElement | null;
+    if (!container) return;
 
-    const fullscreenElement = doc.fullscreenElement ?? doc.webkitFullscreenElement;
+    const supportsElementFullscreen = Boolean(
+      document.fullscreenEnabled ?? doc.webkitFullscreenEnabled,
+    );
 
     try {
-      if (fullscreenElement === node) {
-        if (doc.exitFullscreen) {
-          await doc.exitFullscreen();
-        } else if (doc.webkitExitFullscreen) {
-          await doc.webkitExitFullscreen();
+      if (supportsElementFullscreen) {
+        const fullscreenElement = doc.fullscreenElement ?? doc.webkitFullscreenElement;
+        if (fullscreenElement === container) {
+          if (doc.exitFullscreen) {
+            await doc.exitFullscreen();
+          } else if (doc.webkitExitFullscreen) {
+            await doc.webkitExitFullscreen();
+          }
+        } else if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          await container.webkitRequestFullscreen();
         }
-      } else if (node.requestFullscreen) {
-        await node.requestFullscreen();
-      } else if (node.webkitRequestFullscreen) {
-        await node.webkitRequestFullscreen();
+      } else if (video?.webkitEnterFullscreen) {
+        // iOS Safari: no element Fullscreen API, fall back to the video's
+        // native fullscreen player.
+        if (video.webkitDisplayingFullscreen) {
+          video.webkitExitFullscreen?.();
+        } else {
+          video.webkitEnterFullscreen();
+        }
       }
     } catch (err) {
       console.error(err);
@@ -258,7 +299,7 @@ export function CameraViewer({
         </CardTitle>
         <CardAction>
           <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
-            {isFullscreen ? <ShrinkIcon /> : <ExpandIcon />}
+            {fullscreenMode !== "none" ? <ShrinkIcon /> : <ExpandIcon />}
           </Button>
         </CardAction>
       </CardHeader>
@@ -267,7 +308,8 @@ export function CameraViewer({
           ref={viewerRef}
           className={cn(
             "group relative aspect-video overflow-hidden border border-border/60 bg-black",
-            isFullscreen && "flex aspect-auto size-full items-center justify-center",
+            fullscreenMode === "element" &&
+              "flex aspect-auto size-full items-center justify-center",
           )}
         >
           {isConnecting && !isLive ? (
@@ -286,7 +328,7 @@ export function CameraViewer({
             </div>
           ) : null}
 
-          {isFullscreen ? (
+          {fullscreenMode === "element" ? (
             <div
               ref={overlayRef}
               className="absolute inset-x-0 top-0 flex items-center justify-between p-4 transition-opacity duration-300 bg-linear-to-b from-black/60 to-transparent"
