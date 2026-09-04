@@ -12,16 +12,12 @@ import { StatusCard } from "./status-card";
 import { TemperatureCard } from "./temperature-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PrinterOptions } from "./printer-options";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { formatFileName } from "@/lib/fs";
 import MotorControls from "./motor-controls/motor-controls";
 import { Separator } from "../ui/separator";
 
 export function Dashboard() {
-  const [cameraMaximized, setCameraMaximized] = useState(false);
-
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
   const {
     telemetry,
@@ -79,16 +75,9 @@ export function Dashboard() {
         </div>
       </header>
 
-      <div
-        className={cn(
-          "flex flex-col lg:grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]",
-          cameraMaximized ? "flex flex-col" : "",
-        )}
-      >
+      <div className="flex flex-col lg:grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
         <CameraViewer
           className="row-span-2 col-start-1 lg:col-span-1 lg:col-start-2 lg:row-start-1"
-          maximized={cameraMaximized}
-          onMaximize={() => setCameraMaximized(!cameraMaximized)}
           telemetry={telemetry}
           commandContext={commandContext}
           isConnected={isConnected}

@@ -31,9 +31,18 @@ interface ActiveCameraConnection {
   controller: AbortController;
 }
 
+interface FullscreenCapableElement extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void>;
+}
+
+interface FullscreenCapableDocument extends Document {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+}
+
+const CONTROLS_HIDE_DELAY_MS = 3000;
+
 interface CameraViewerProps {
-  maximized?: boolean;
-  onMaximize?: () => void;
   className?: string;
   telemetry: PrinterTelemetry;
   commandContext: PrinterCommandContext;
@@ -41,19 +50,23 @@ interface CameraViewerProps {
 }
 
 export function CameraViewer({
-  maximized,
-  onMaximize,
   className,
   telemetry,
   commandContext,
   isConnected,
 }: CameraViewerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const connectionRef = useRef<ActiveCameraConnection | null>(null);
   const generationRef = useRef(0);
+  const hideControlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [isConnecting, setIsConnecting] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const runConnection = useCallback(async (generation: number) => {
     const previousConnection = connectionRef.current;
@@ -156,6 +169,86 @@ export function CameraViewer({
     };
   }, [runConnection]);
 
+  useEffect(() => {
+    const doc = document as FullscreenCapableDocument;
+
+    const handleFullscreenChange = () => {
+      const fullscreenElement = doc.fullscreenElement ?? doc.webkitFullscreenElement;
+      setIsFullscreen(fullscreenElement === viewerRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const showControls = () => overlayRef.current?.classList.remove("opacity-0");
+    const hideControls = () => overlayRef.current?.classList.add("opacity-0");
+
+    const scheduleHide = () => {
+      if (hideControlsTimerRef.current) {
+        clearTimeout(hideControlsTimerRef.current);
+      }
+      hideControlsTimerRef.current = setTimeout(
+        hideControls,
+        CONTROLS_HIDE_DELAY_MS,
+      );
+    };
+
+    const handleActivity = () => {
+      showControls();
+      scheduleHide();
+    };
+
+    const node = viewerRef.current;
+    node?.addEventListener("mousemove", handleActivity);
+    node?.addEventListener("mouseenter", handleActivity);
+    scheduleHide();
+
+    return () => {
+      node?.removeEventListener("mousemove", handleActivity);
+      node?.removeEventListener("mouseenter", handleActivity);
+      if (hideControlsTimerRef.current) {
+        clearTimeout(hideControlsTimerRef.current);
+        hideControlsTimerRef.current = null;
+      }
+    };
+  }, [isFullscreen]);
+
+  const toggleFullscreen = useCallback(async () => {
+    const doc = document as FullscreenCapableDocument;
+    const node = viewerRef.current as FullscreenCapableElement | null;
+    if (!node) return;
+
+    const fullscreenElement = doc.fullscreenElement ?? doc.webkitFullscreenElement;
+
+    try {
+      if (fullscreenElement === node) {
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        }
+      } else if (node.requestFullscreen) {
+        await node.requestFullscreen();
+      } else if (node.webkitRequestFullscreen) {
+        await node.webkitRequestFullscreen();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
   return (
     <Card className={cn("flex-1", className)}>
       <CardHeader>
@@ -164,15 +257,19 @@ export function CameraViewer({
           Chamber Camera
         </CardTitle>
         <CardAction>
-          {onMaximize ? (
-            <Button variant="ghost" size="icon" onClick={onMaximize}>
-              {maximized ? <ShrinkIcon /> : <ExpandIcon />}
-            </Button>
-          ) : null}
+          <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
+            {isFullscreen ? <ShrinkIcon /> : <ExpandIcon />}
+          </Button>
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="relative aspect-video overflow-hidden border border-border/60 bg-black">
+        <div
+          ref={viewerRef}
+          className={cn(
+            "group relative aspect-video overflow-hidden border border-border/60 bg-black",
+            isFullscreen && "flex aspect-auto size-full items-center justify-center",
+          )}
+        >
           {isConnecting && !isLive ? (
             <Skeleton className="absolute inset-0 rounded-none" />
           ) : null}
@@ -186,6 +283,31 @@ export function CameraViewer({
           {!isLive && !isConnecting ? (
             <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
               Camera offline
+            </div>
+          ) : null}
+
+          {isFullscreen ? (
+            <div
+              ref={overlayRef}
+              className="absolute inset-x-0 top-0 flex items-center justify-between p-4 transition-opacity duration-300 bg-linear-to-b from-black/60 to-transparent"
+            >
+              <div className="flex items-center gap-2 text-sm text-white">
+                <span
+                  className={cn(
+                    "size-2 rounded-full",
+                    isLive ? "bg-green-500" : "bg-muted-foreground",
+                  )}
+                />
+                {isLive ? "Live" : "Offline"}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10 hover:text-white"
+                onClick={toggleFullscreen}
+              >
+                <ShrinkIcon />
+              </Button>
             </div>
           ) : null}
         </div>
