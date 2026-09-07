@@ -48,19 +48,30 @@ export const CHAMBER_TEMPERATURE_WARNING_DELTA = 5;
 export interface ChamberTempEvaluation {
   status: ChamberTempStatus;
   diff: number;
-  filamentType: FilamentType | null;
+  filamentType: FilamentType | FilamentType[] | null;
   chamberTemperature: ChamberTemperature;
 }
 
 export function evaluateChamberTemperature(
-  filamentType: FilamentType | null,
+  filamentType: FilamentType | FilamentType[] | null,
   temperature: number | undefined,
 ): ChamberTempEvaluation | null {
-  if (!filamentType || !temperature) {
+  if (
+    !filamentType ||
+    !temperature ||
+    (Array.isArray(filamentType) && filamentType.length === 0)
+  ) {
     return null;
   }
 
-  const chamberTemperature = CHAMBER_TEMPERATURES[filamentType];
+  const filamentTypes = Array.isArray(filamentType)
+    ? filamentType
+    : [filamentType];
+
+  const chamberTemperature: ChamberTemperature = {
+    low: Math.max(...filamentTypes.map((type) => CHAMBER_TEMPERATURES[type].low)),
+    high: Math.min(...filamentTypes.map((type) => CHAMBER_TEMPERATURES[type].high)),
+  };
 
   if (temperature < chamberTemperature.low) {
     return {

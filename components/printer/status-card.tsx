@@ -164,6 +164,14 @@ export function StatusCard({
     ? `${gcodeAnalysis.totalLayerCount} layers`
     : "\u2014";
 
+  const hasMultipleFilaments = Array.isArray(gcodeAnalysis?.filamentType);
+  const filamentCounts = !hasMultipleFilaments
+    ? { [gcodeAnalysis?.filamentType as string]: 1 }
+    : (gcodeAnalysis?.filamentType as string[])?.reduce(
+        (acc, val) => ({ ...acc, [val]: (acc[val] ?? 0) + 1 }),
+        {} as Record<string, number>,
+      );
+
   return (
     <Card className={cn("flex-1 flex h-full", className)}>
       <CardHeader>
@@ -175,9 +183,24 @@ export function StatusCard({
               {status.replace("-", " ")}
             </Badge>
             {gcodeAnalysis?.filamentType ? (
-              <Badge variant="outline" className="capitalize">
-                {gcodeAnalysis.filamentType}
-              </Badge>
+              hasMultipleFilaments ? (
+                Object.entries(filamentCounts).map(([filament, count]) => (
+                  <Badge
+                    key={filament}
+                    variant="outline"
+                    className="capitalize gap-2"
+                  >
+                    {filament}
+                    <span className="lowercase text-muted-foreground">
+                      {count > 1 ? `x${count}` : undefined}
+                    </span>
+                  </Badge>
+                ))
+              ) : (
+                <Badge variant="outline" className="capitalize">
+                  {gcodeAnalysis.filamentType}
+                </Badge>
+              )
             ) : null}
             {isLoading ? (
               <Badge variant="outline">

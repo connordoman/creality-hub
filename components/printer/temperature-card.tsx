@@ -224,7 +224,7 @@ export function ChamberTempBlock({
 interface TemperatureCardProps {
   telemetry: PrinterTelemetry;
   className?: string;
-  filamentType: string | null;
+  filamentType: string | string[] | null;
 }
 
 export function TemperatureCard({
