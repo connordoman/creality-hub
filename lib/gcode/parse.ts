@@ -1,4 +1,5 @@
 export type PauseProgressMethod = "executable-bytes" | "bytes" | "layer";
+export type PauseReason = "filament-change" | "manual";
 
 export interface GcodeAnalysisBounds {
   gcodeStartByte: number | null;
@@ -11,6 +12,7 @@ export interface PrintPause {
   layer: number | null;
   line: number;
   method: PauseProgressMethod;
+  reason: PauseReason;
 }
 
 export interface GcodeAnalysis {
@@ -22,6 +24,7 @@ export interface GcodeAnalysis {
 }
 
 const PAUSE_LINE_RE = /^\s*PAUSE(?:\s|;|$)/i;
+const FILAMENT_CHANGE_LINE_RE = /^\s*(?:M600|FILAMENT_CHANGE)(?:\s|;|$)/i;
 
 function readBoundsNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -97,8 +100,13 @@ function isLayerChangeLine(line: string): boolean {
   return /;LAYER_CHANGE/i.test(line);
 }
 
+function isFilamentChangeLine(line: string): boolean {
+  return FILAMENT_CHANGE_LINE_RE.test(line.trim());
+}
+
 function isPauseLine(line: string): boolean {
-  return PAUSE_LINE_RE.test(line.trim());
+  const trimmed = line.trim();
+  return PAUSE_LINE_RE.test(trimmed) || FILAMENT_CHANGE_LINE_RE.test(trimmed);
 }
 
 function percentFromBytes(
@@ -149,6 +157,7 @@ export function parseGcodeAnalysis(gcode: string): GcodeAnalysis {
         layer: currentLayer,
         line: lineNumber,
         method: byteProgress.method,
+        reason: isFilamentChangeLine(line) ? "filament-change" : "manual",
       });
     }
 

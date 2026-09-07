@@ -28,7 +28,7 @@ export function InstallPrompt() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsIOS(
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window)
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window),
     );
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
 
@@ -42,7 +42,7 @@ export function InstallPrompt() {
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        handleBeforeInstallPrompt
+        handleBeforeInstallPrompt,
       );
     };
   }, []);
@@ -70,7 +70,7 @@ export function InstallPrompt() {
 
       toast.custom(
         (toastId) => (
-          <div className="flex w-full max-w-md items-start gap-3 bg-card p-4 rounded-none shadow-lg border border-border">
+          <div className="flex w-full max-w-md items-start gap-3 bg-card/50 backdrop-blur-xl p-4 rounded-none shadow-lg border border-border">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Download className="size-5" />
             </div>
@@ -136,7 +136,7 @@ export function InstallPrompt() {
           duration: Infinity,
           dismissible: true,
           onDismiss: () => setDismissed(true),
-        }
+        },
       );
     }, PROMPT_DELAY_MS);
 

@@ -252,9 +252,18 @@ export function StatusCard({
             value={progress}
             indications={gcodeAnalysis?.pauses.map((pause) => ({
               percentage: pause.percentage,
+              variant: pause.reason === "filament-change" ? "secondary" : "outline",
+              title:
+                pause.reason === "filament-change"
+                  ? "Filament change"
+                  : "Pause",
               label: (
                 <>
-                  <PauseIcon className="size" />
+                  {pause.reason === "filament-change" ? (
+                    <SpoolIcon className="size" />
+                  ) : (
+                    <PauseIcon className="size" />
+                  )}
                   <span>{Math.floor(pause.percentage)}%</span>
                 </>
               ),

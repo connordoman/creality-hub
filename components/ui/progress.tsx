@@ -3,12 +3,15 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
 import { cn } from "@/lib/utils";
-import { Badge } from "./badge";
+import { Badge, badgeVariants } from "./badge";
+import type { VariantProps } from "class-variance-authority";
 
 interface ProgressProps extends ProgressPrimitive.Root.Props {
   indications?: {
     percentage: number;
     label: React.ReactNode | undefined;
+    variant?: VariantProps<typeof badgeVariants>["variant"];
+    title?: string;
   }[];
 }
 
@@ -35,9 +38,10 @@ function Progress({
                 key={`${indication.percentage}-${index}`}
                 className="absolute translate-x-[-50%] bottom-0 z-10"
                 style={{ left: `${indication.percentage}%` }}
+                title={indication.title}
               >
                 <div className="absolute left-1/2 -bottom-4 w-px bg-foreground h-4.5 " />
-                <Badge variant="outline" className="text-xs">
+                <Badge variant={indication.variant ?? "outline"} className="text-xs">
                   {indication.label}
                 </Badge>
               </div>
