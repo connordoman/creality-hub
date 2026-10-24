@@ -81,6 +81,27 @@ export function canJogZ(homed: AxisHomedStatus): boolean {
   return homed.z === true;
 }
 
+export type StepSize =
+  | { unit: "mm"; value: number }
+  | { unit: "%"; value: number };
+
+export function formatStepSize(step: StepSize): string {
+  return `${step.value} ${step.unit}`;
+}
+
+/** Percent steps are a share of the axis length, rounded to a whole mm (min 1). */
+export function resolveStepMm(
+  step: StepSize,
+  buildVolume: BuildVolume,
+  axis: JogAxis,
+): number {
+  if (step.unit === "mm") {
+    return step.value;
+  }
+
+  return Math.max(1, Math.round((buildVolume[axis] * step.value) / 100));
+}
+
 const MIN_JOG_DISTANCE_MM = 0.01;
 const JOG_DISTANCE_PRECISION = 100;
 

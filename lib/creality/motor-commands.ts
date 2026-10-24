@@ -37,8 +37,9 @@ export function buildJogParams(
 }
 
 export function buildHomeParams(axes: HomeAxes): Record<string, string> {
+  // `autohome` is a read-only telemetry field; homing goes through gcodeCmd.
   return {
-    autohome: axes === "xy" ? "X Y" : "Z",
+    gcodeCmd: axes === "xy" ? "G28 X Y" : "G28 Z",
   };
 }
 

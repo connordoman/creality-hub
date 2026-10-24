@@ -1,6 +1,7 @@
 export const DEFAULT_PRINTER_NAME = "Creality K1C";
 export const DEFAULT_MOTOR_STEP_SIZES = [1, 5, 10, 50] as const;
 export const DEFAULT_BUILD_VOLUME = { x: 220, y: 220, z: 250 } as const;
+export const PERCENT_STEP_SIZES = [1, 5, 10, 25, 50] as const;
 export const MAX_MOTOR_STEP_SIZES = 8;
 export const MIN_MOTOR_STEP_SIZE_MM = 0.01;
 export const MAX_MOTOR_STEP_SIZE_MM = 1000;

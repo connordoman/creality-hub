@@ -8,7 +8,7 @@ import { HouseIcon, LayerArrowDownIcon, LayerArrowUpIcon } from "lucide-react";
 interface ZControlsProps {
   jogDisabled: boolean;
   homeDisabled: boolean;
-  stepSize?: number;
+  stepLabel?: string;
   className?: string;
   isJogDisabled?: (axis: JogAxis, direction: JogDirection) => boolean;
   onJog: (axis: JogAxis, direction: JogDirection) => void;
@@ -18,7 +18,7 @@ interface ZControlsProps {
 export function ZControls({
   jogDisabled,
   homeDisabled,
-  stepSize,
+  stepLabel,
   className,
   isJogDisabled,
   onJog,
@@ -31,7 +31,7 @@ export function ZControls({
         size="icon-lg"
         disabled={jogDisabled || isJogDisabled?.("z", 1)}
         onClick={() => onJog("z", -1)}
-        aria-label={`Move Z axis up ${stepSize} mm`}
+        aria-label={`Move Z axis up ${stepLabel}`}
         className="relative -bottom-px border-b-0"
       >
         <LayerArrowUpIcon />
@@ -55,7 +55,7 @@ export function ZControls({
         size="icon-lg"
         disabled={jogDisabled || isJogDisabled?.("z", -1)}
         onClick={() => onJog("z", 1)}
-        aria-label={`Move Z axis down ${stepSize} mm`}
+        aria-label={`Move Z axis down ${stepLabel}`}
         className="relative -top-px border-t-0"
       >
         <LayerArrowDownIcon />

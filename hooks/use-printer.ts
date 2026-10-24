@@ -12,6 +12,7 @@ import {
 } from "@/lib/creality/printer-connection";
 import type { CrealityWebSocketClient } from "@/lib/creality/websocket-client";
 import type { PrinterCommandContext } from "@/hooks/use-printer-command";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function mergeTelemetry(
@@ -94,6 +95,9 @@ export function usePrinter(host: string | undefined) {
       setIsConnected(connected);
     };
 
+    const unsubscribeError = client.onError((message) => {
+      toast.error("Printer command failed", { description: message });
+    });
     const unsubscribeState = client.onStateChange(handleStateChange);
     const unsubscribeConnection =
       client.onConnectionChange(handleConnectionChange);
@@ -106,6 +110,7 @@ export function usePrinter(host: string | undefined) {
 
     return () => {
       clientRef.current = null;
+      unsubscribeError();
       unsubscribeState();
       unsubscribeConnection();
       releasePrinterConnection(host);
