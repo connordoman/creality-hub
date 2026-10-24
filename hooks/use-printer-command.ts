@@ -2,6 +2,7 @@
 
 import type { PrinterCommandMutationConfig } from "@/lib/creality/printer-commands";
 import type { PrinterCommand, PrinterTelemetry } from "@/lib/creality/types";
+import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 
 const DEFAULT_CONFIRMATION_TIMEOUT_MS = 15_000;
@@ -67,8 +68,9 @@ export function usePrinterCommandMutation<TVariables = void>(
       );
       context.applyOptimisticPatch(patch);
     },
-    onError: () => {
+    onError: (error) => {
       context.clearOptimisticPatch();
+      toast.error("Printer command failed", { description: error.message });
     },
   });
 }

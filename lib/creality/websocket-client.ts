@@ -13,6 +13,7 @@ import type { PrinterCommand, PrinterTelemetry } from "./types";
 
 type StateListener = (telemetry: PrinterTelemetry) => void;
 type ConnectionListener = (connected: boolean) => void;
+type ErrorListener = (message: string) => void;
 type OutboundMessage = Record<string, unknown>;
 
 function mergeTelemetry(
@@ -44,9 +45,11 @@ export class CrealityWebSocketClient {
   private lastParaPoll = 0;
   private lastObjectsPoll = 0;
   private inFlight = false;
+  private closingAsStale = false;
   private outboundQueue: OutboundMessage[] = [];
   private stateListeners = new Set<StateListener>();
   private connectionListeners = new Set<ConnectionListener>();
+  private errorListeners = new Set<ErrorListener>();
 
   constructor(private readonly host: string) {}
 
@@ -99,6 +102,15 @@ export class CrealityWebSocketClient {
     return () => this.connectionListeners.delete(listener);
   }
 
+  onError(listener: ErrorListener): () => void {
+    this.errorListeners.add(listener);
+    return () => this.errorListeners.delete(listener);
+  }
+
+  private emitError(message: string): void {
+    this.errorListeners.forEach((listener) => listener(message));
+  }
+
   sendCommand(command: PrinterCommand): void {
     switch (command) {
       case "pause":
@@ -120,6 +132,11 @@ export class CrealityWebSocketClient {
   }
 
   sendSetParams(params: Record<string, unknown>): void {
+    if (!this.connected) {
+      this.emitError("Printer is not connected");
+      return;
+    }
+
     this.enqueue({ method: "set", params }, true);
   }
 
@@ -207,7 +224,12 @@ export class CrealityWebSocketClient {
       this.handleMessage(event.data);
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      console.debug(
+        `[creality-ws] closed code=${event.code} reason=${event.reason || "-"} opened=${opened} stale=${this.closingAsStale}`,
+      );
+      this.closingAsStale = false;
+
       if (this.ws === ws) {
         this.ws = null;
       }
@@ -267,8 +289,22 @@ export class CrealityWebSocketClient {
       return;
     }
 
-    this.inFlight = true;
-    this.ws.send(JSON.stringify(payload));
+    // Only "get" requests are guaranteed a reply; "set" commands are
+    // fire-and-forget so they can't wedge the queue waiting for an ack.
+    this.inFlight = payload.method === "get";
+
+    try {
+      this.ws.send(JSON.stringify(payload));
+    } catch (error) {
+      this.inFlight = false;
+      this.emitError(
+        error instanceof Error ? error.message : "Failed to send command",
+      );
+    }
+
+    if (!this.inFlight) {
+      queueMicrotask(() => this.pump());
+    }
   }
 
   private enqueueIdlePoll(): void {
@@ -329,7 +365,11 @@ export class CrealityWebSocketClient {
     if (typeof raw !== "string") return;
 
     const text = raw.trim();
-    if (text === "ok") return;
+    if (text === "ok") {
+      this.inFlight = false;
+      queueMicrotask(() => this.pump());
+      return;
+    }
 
     try {
       const payload = JSON.parse(text) as Record<string, unknown>;
@@ -338,6 +378,9 @@ export class CrealityWebSocketClient {
         this.ws?.send("ok");
         return;
       }
+
+      this.inFlight = false;
+      queueMicrotask(() => this.pump());
 
       const merged = coerceNumbers(payload) as PrinterTelemetry;
       this.state = mergeTelemetry(this.state, merged);
@@ -352,6 +395,7 @@ export class CrealityWebSocketClient {
 
     this.staleTimer = setInterval(() => {
       if (this.isStale()) {
+        this.closingAsStale = true;
         this.inFlight = false;
         this.ws?.close();
       }

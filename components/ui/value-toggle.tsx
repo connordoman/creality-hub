@@ -6,7 +6,7 @@ import { ButtonGroup } from "./button-group";
 
 interface ValueToggleProps<T extends string | number> {
   items: T[] | readonly T[];
-  value: T;
+  value: T | undefined;
   unit: string;
   className?: string;
   onChange: (value: T) => void;
@@ -26,8 +26,11 @@ export function ValueToggle<T extends string | number>({
           key={`${item}-${index}`}
           size="xs"
           variant="outline"
+          data-active={value === item}
           disabled={value === item}
-          className="flex-1"
+          className={cn(
+            "flex-1 data-active:disabled:opacity-100 data-active:border-primary/30! data-active:bg-primary/80!",
+          )}
           onClick={() => onChange(item)}
         >
           {`${item} ${unit}`}

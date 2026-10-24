@@ -16,6 +16,10 @@ export function usePrintHistory(pagination: PrintHistoryPagination) {
         limit: pagination.pageSize,
         start: pagination.pageIndex * pagination.pageSize,
       });
+
+      if (process.env.NODE_ENV === "development") {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
       return page;
     },
     placeholderData: {
@@ -23,5 +27,7 @@ export function usePrintHistory(pagination: PrintHistoryPagination) {
       totalCount: 0,
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }

@@ -19,6 +19,7 @@ import { HistoryIcon, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { printHistoryColumns } from "./print-history-columns";
 import { Spinner } from "../ui/spinner";
+import { cn } from "@/lib/utils";
 
 export function PrintHistory() {
   const [pagination, setPagination] = useState<PrintHistoryPagination>({
@@ -26,11 +27,12 @@ export function PrintHistory() {
     pageSize: 10,
   });
 
-  const { data, isLoading, error, refetch } = usePrintHistory(pagination);
+  const { data, isLoading, isFetching, error, refetch } =
+    usePrintHistory(pagination);
 
   const pageCount = useMemo(
     () => Math.ceil((data?.totalCount ?? 0) / pagination.pageSize),
-    [data?.totalCount, pagination.pageSize]
+    [data?.totalCount, pagination.pageSize],
   );
 
   return (
@@ -58,7 +60,10 @@ export function PrintHistory() {
             onClick={() => void refetch()}
             disabled={isLoading}
           >
-            <RefreshCw data-icon="inline-start" />
+            <RefreshCw
+              data-icon="inline-start"
+              className={cn(isFetching ? "animate-spin" : "")}
+            />
             Refresh
           </Button>
         </CardAction>

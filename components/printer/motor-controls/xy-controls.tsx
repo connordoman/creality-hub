@@ -14,7 +14,7 @@ import {
 interface XYControlsProps {
   jogDisabled: boolean;
   homeDisabled: boolean;
-  stepSize?: number;
+  stepLabel?: string;
   className?: string;
   isJogDisabled?: (axis: JogAxis, direction: JogDirection) => boolean;
   onJog: (axis: JogAxis, direction: JogDirection) => void;
@@ -24,7 +24,7 @@ interface XYControlsProps {
 export function XYControls({
   jogDisabled,
   homeDisabled,
-  stepSize,
+  stepLabel,
   className,
   isJogDisabled,
   onJog,
@@ -43,7 +43,7 @@ export function XYControls({
         className="col-start-2 row-start-1 relative -bottom-px border-b-0"
         disabled={jogDisabled || isJogDisabled?.("y", 1)}
         onClick={() => onJog("y", 1)}
-        aria-label={`Move Y axis forward ${stepSize} mm`}
+        aria-label={`Move Y axis forward ${stepLabel}`}
       >
         <ArrowUpIcon />
       </Button>
@@ -53,7 +53,7 @@ export function XYControls({
         className="col-start-1 row-start-2 relative -right-px border-r-0"
         disabled={jogDisabled || isJogDisabled?.("x", -1)}
         onClick={() => onJog("x", -1)}
-        aria-label={`Move X axis left ${stepSize} mm`}
+        aria-label={`Move X axis left ${stepLabel}`}
       >
         <ArrowLeftIcon />
       </Button>
@@ -78,7 +78,7 @@ export function XYControls({
         className="col-start-3 row-start-2 relative -left-px border-l-0"
         disabled={jogDisabled || isJogDisabled?.("x", 1)}
         onClick={() => onJog("x", 1)}
-        aria-label={`Move X axis right ${stepSize} mm`}
+        aria-label={`Move X axis right ${stepLabel}`}
       >
         <ArrowRightIcon />
       </Button>
@@ -88,7 +88,7 @@ export function XYControls({
         className="col-start-2 row-start-3 relative -top-px border-t-0"
         disabled={jogDisabled || isJogDisabled?.("y", -1)}
         onClick={() => onJog("y", -1)}
-        aria-label={`Move Y axis back ${stepSize} mm`}
+        aria-label={`Move Y axis back ${stepLabel}`}
       >
         <ArrowDownIcon />
       </Button>

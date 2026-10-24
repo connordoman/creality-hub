@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  ArrowDownIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  ArrowUpIcon,
-  HouseIcon,
-  LayerArrowDownIcon,
-  LayerArrowUpIcon,
-  Move3dIcon,
-} from "lucide-react";
+import { Move3dIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -17,16 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "../../ui/card";
-import { ButtonGroup } from "../../ui/button-group";
-import { Button } from "../../ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
 import type { PrinterCommandContext } from "@/hooks/use-printer-command";
 import type { PrinterTelemetry } from "@/lib/creality/types";
 import { usePrinterSettings } from "@/context/printer-settings";
 import {
   DEFAULT_BUILD_VOLUME,
   DEFAULT_MOTOR_STEP_SIZES,
+  PERCENT_STEP_SIZES,
 } from "@/lib/settings/validation";
 import {
   buildHomeParams,
@@ -43,13 +32,19 @@ import {
   canJogZ,
   clampJogDistance,
   parseAutohomeStatus,
+  formatStepSize,
   parseCurPosition,
+  resolveStepMm,
+  type StepSize,
 } from "@/lib/creality/position";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import { ValueToggle } from "../../ui/value-toggle";
 import { XYControls } from "./xy-controls";
 import { ZControls } from "./z-controls";
 import { PrintCoordinates } from "./print-coordinates";
+import { Separator } from "@/components/ui/separator";
+
+const STEP_UNITS: StepSize["unit"][] = ["mm", "%"];
 
 interface MotorControlsProps {
   telemetry: PrinterTelemetry;
@@ -73,13 +68,27 @@ export default function MotorControls({
     () => buildVolume ?? { ...DEFAULT_BUILD_VOLUME },
     [buildVolume],
   );
-  const [stepSize, setStepSize] = useState(stepSizes[0]);
+  // Percent steps need a known build volume to resolve against.
+  const percentStepsAvailable = buildVolume !== undefined;
+  const [step, setStep] = useState<StepSize>({
+    unit: "mm",
+    value: stepSizes[0],
+  });
 
   useEffect(() => {
-    setStepSize((current) =>
-      stepSizes.includes(current) ? current : stepSizes[0],
-    );
-  }, [stepSizes]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStep((current) => {
+      if (current.unit === "%") {
+        return percentStepsAvailable
+          ? current
+          : { unit: "mm", value: stepSizes[0] };
+      }
+
+      return stepSizes.includes(current.value)
+        ? current
+        : { unit: "mm", value: stepSizes[0] };
+    });
+  }, [stepSizes, percentStepsAvailable]);
 
   const isHydrated = useIsHydrated();
 
@@ -101,8 +110,14 @@ export default function MotorControls({
 
   const isJogDisabled = useCallback(
     (axis: JogAxis, direction: JogDirection) =>
-      !canJogWithinBuildVolume(position, volume, axis, direction, stepSize),
-    [position, volume, stepSize],
+      !canJogWithinBuildVolume(
+        position,
+        volume,
+        axis,
+        direction,
+        resolveStepMm(step, volume, axis),
+      ),
+    [position, volume, step],
   );
 
   const jog = (axis: JogAxis, direction: JogDirection) => {
@@ -111,7 +126,7 @@ export default function MotorControls({
       volume,
       axis,
       direction,
-      stepSize,
+      resolveStepMm(step, volume, axis),
     );
 
     if (clampedStep === null) {
@@ -135,18 +150,47 @@ export default function MotorControls({
       </CardHeader>
       <CardContent className="flex justify-center">
         <div className="flex flex-col max-w-xs justify-center w-full">
-          <ValueToggle
-            items={stepSizes}
-            value={stepSize}
-            unit="mm"
-            onChange={setStepSize}
-          />
+          <div className="flex flex-row items-start gap-2">
+            {percentStepsAvailable && (
+              <ValueToggle
+                className="mb-1 w-fit"
+                items={STEP_UNITS}
+                value={step.unit}
+                unit=""
+                onChange={(unit) =>
+                  setStep(
+                    unit === "mm"
+                      ? { unit, value: stepSizes[0] }
+                      : { unit, value: PERCENT_STEP_SIZES[0] },
+                  )
+                }
+              />
+            )}
+            <Separator orientation="vertical" className="h-4 mt-1" />
+            <div className="flex-1">
+              {step.unit === "mm" ? (
+                <ValueToggle
+                  items={stepSizes}
+                  value={step.value}
+                  unit="mm"
+                  onChange={(value) => setStep({ unit: "mm", value })}
+                />
+              ) : (
+                <ValueToggle
+                  items={PERCENT_STEP_SIZES}
+                  value={step.value}
+                  unit="%"
+                  onChange={(value) => setStep({ unit: "%", value })}
+                />
+              )}
+            </div>
+          </div>
           <div className="flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
             <div className="w-1/2 flex flex-col items-center">
               <XYControls
                 jogDisabled={xyJogDisabled}
                 homeDisabled={controlsDisabled}
-                stepSize={stepSize}
+                stepLabel={formatStepSize(step)}
                 isJogDisabled={isJogDisabled}
                 onJog={jog}
                 onHome={() => home("xy")}
@@ -157,7 +201,7 @@ export default function MotorControls({
               <ZControls
                 jogDisabled={zJogDisabled}
                 homeDisabled={controlsDisabled}
-                stepSize={stepSize}
+                stepLabel={formatStepSize(step)}
                 isJogDisabled={isJogDisabled}
                 onJog={jog}
                 onHome={() => home("z")}
