@@ -75,7 +75,7 @@ TrueNAS will download the latest container image and spin it up
 
 Requirements:
 
-- [Bun](https://bun.sh/)
+- [Bun](https://bun.sh/) 1.4.4 or newer
 
 First, clone the repo to your machine:
 

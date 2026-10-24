@@ -1,10 +1,10 @@
-FROM oven/bun:1.3.13 AS deps
+FROM oven/bun:1.4.4 AS deps
 WORKDIR /app
 
 COPY package.json bun.lock ./
-RUN bun install
+RUN bun install --frozen-lockfile
 
-FROM oven/bun:1.3.13 AS builder
+FROM oven/bun:1.4.4 AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -13,7 +13,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build
 
-FROM node:22-alpine AS runner
+FROM oven/bun:1.4.4-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -35,4 +35,4 @@ VOLUME ["/data"]
 USER nextjs
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+CMD ["bun", "server.js"]
