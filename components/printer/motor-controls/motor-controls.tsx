@@ -149,8 +149,8 @@ export default function MotorControls({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex justify-center">
-        <div className="flex flex-col max-w-xs justify-center w-full">
-          <div className="flex flex-row items-start gap-2">
+        <div className="flex flex-col max-w-xs justify-center w-full ">
+          <div className="flex flex-row items-start gap-2 overflow-x-scroll scrollbar-thin scrollbar-thumb-muted">
             {percentStepsAvailable && (
               <ValueToggle
                 className="mb-1 w-fit"

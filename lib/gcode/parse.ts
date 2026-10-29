@@ -1,3 +1,5 @@
+import { parseFilamentColors, type FilamentColor } from "@/lib/gcode/colors";
+
 export type PauseProgressMethod = "executable-bytes" | "bytes" | "layer";
 export type PauseReason = "filament-change" | "manual";
 
@@ -21,6 +23,8 @@ export interface GcodeAnalysis {
   totalLayerCount: number;
   totalLineCount: number;
   filamentType: string | string[] | null;
+  /** Slicer-declared color per filament/tool index (T0, T1, ...). */
+  filamentColors: FilamentColor[] | null;
 }
 
 const PAUSE_LINE_RE = /^\s*PAUSE(?:\s|;|$)/i;
@@ -177,5 +181,6 @@ export function parseGcodeAnalysis(gcode: string): GcodeAnalysis {
     totalLayerCount,
     totalLineCount: lines.length,
     filamentType: null,
+    filamentColors: parseFilamentColors(gcode),
   };
 }
