@@ -16,6 +16,7 @@ import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { formatFileName } from "@/lib/fs";
 import MotorControls from "./motor-controls/motor-controls";
 import { Separator } from "../ui/separator";
+import { GcodeViewerCard } from "./gcode-viewer-card";
 
 export function Dashboard() {
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
@@ -105,6 +106,8 @@ export function Dashboard() {
           className="col-span-1"
         />
       </div>
+
+      <GcodeViewerCard telemetry={telemetry} status={status} />
 
       <Separator />
 
