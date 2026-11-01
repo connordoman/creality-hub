@@ -148,44 +148,44 @@ export default function MotorControls({
           Motor Controls
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex justify-center">
-        <div className="flex flex-col max-w-xs justify-center w-full ">
-          <div className="flex flex-row items-start gap-2 overflow-x-scroll scrollbar-thin scrollbar-thumb-muted">
-            {percentStepsAvailable && (
-              <ValueToggle
-                className="mb-1 w-fit"
-                items={STEP_UNITS}
-                value={step.unit}
-                unit=""
-                onChange={(unit) =>
-                  setStep(
-                    unit === "mm"
-                      ? { unit, value: stepSizes[0] }
-                      : { unit, value: PERCENT_STEP_SIZES[0] },
-                  )
-                }
-              />
-            )}
-            <Separator orientation="vertical" className="h-4 mt-1" />
-            <div className="flex-1">
-              {step.unit === "mm" ? (
-                <ValueToggle
-                  items={stepSizes}
-                  value={step.value}
-                  unit="mm"
-                  onChange={(value) => setStep({ unit: "mm", value })}
-                />
-              ) : (
-                <ValueToggle
-                  items={PERCENT_STEP_SIZES}
-                  value={step.value}
-                  unit="%"
-                  onChange={(value) => setStep({ unit: "%", value })}
-                />
-              )}
-            </div>
-          </div>
-          <div className="flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
+      <div className="w-fit max-w-full px-4 mx-auto flex flex-row items-start gap-2 overflow-x-scroll scrollbar-none">
+        {percentStepsAvailable && (
+          <ValueToggle
+            className="mb-1 w-fit"
+            items={STEP_UNITS}
+            value={step.unit}
+            unit=""
+            onChange={(unit) =>
+              setStep(
+                unit === "mm"
+                  ? { unit, value: stepSizes[0] }
+                  : { unit, value: PERCENT_STEP_SIZES[0] },
+              )
+            }
+          />
+        )}
+        <Separator orientation="vertical" className="h-4 mt-1" />
+        <div className="flex-1">
+          {step.unit === "mm" ? (
+            <ValueToggle
+              items={stepSizes}
+              value={step.value}
+              unit="mm"
+              onChange={(value) => setStep({ unit: "mm", value })}
+            />
+          ) : (
+            <ValueToggle
+              items={PERCENT_STEP_SIZES}
+              value={step.value}
+              unit="%"
+              onChange={(value) => setStep({ unit: "%", value })}
+            />
+          )}
+        </div>
+      </div>
+      <CardContent className="flex-1 flex justify-center">
+        <div className="flex flex-col  justify-center w-full ">
+          <div className="max-w-xs flex flex-row items-center mt-6 mb-2 justify-around mx-auto w-full">
             <div className="w-1/2 flex flex-col items-center">
               <XYControls
                 jogDisabled={xyJogDisabled}

@@ -89,15 +89,17 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
-        <PrintControls
-          status={status}
-          onCommand={sendCommand}
-          className="self-start"
-        />
-        <TemperatureCard
-          telemetry={telemetry}
-          filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
-        />
+        <div className="flex flex-col gap-3.5">
+          <PrintControls
+            status={status}
+            onCommand={sendCommand}
+            className="self-start"
+          />
+          <TemperatureCard
+            telemetry={telemetry}
+            filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
+          />
+        </div>
 
         <MotorControls
           telemetry={telemetry}
@@ -105,9 +107,8 @@ export function Dashboard() {
           isConnected={isConnected}
           className="col-span-1"
         />
+        <GcodeViewerCard telemetry={telemetry} status={status} />
       </div>
-
-      <GcodeViewerCard telemetry={telemetry} status={status} />
 
       <Separator />
 

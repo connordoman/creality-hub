@@ -58,7 +58,7 @@ export function PrintControls({
     status === "printing" || status === "paused" || status === "self-testing";
 
   return (
-    <Card className={cn("flex-1 w-full h-full", className)}>
+    <Card className={cn("flex-1 w-full", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ToggleRightIcon className="size-4" />
