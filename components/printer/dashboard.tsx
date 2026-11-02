@@ -16,6 +16,7 @@ import useGcodeAnalysis from "@/hooks/use-gcode-analysis";
 import { formatFileName } from "@/lib/fs";
 import MotorControls from "./motor-controls/motor-controls";
 import { Separator } from "../ui/separator";
+import { GcodeViewerCard } from "./gcode-viewer-card";
 
 export function Dashboard() {
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
@@ -88,15 +89,17 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
-        <PrintControls
-          status={status}
-          onCommand={sendCommand}
-          className="self-start"
-        />
-        <TemperatureCard
-          telemetry={telemetry}
-          filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
-        />
+        <div className="flex flex-col gap-3.5">
+          <PrintControls
+            status={status}
+            onCommand={sendCommand}
+            className="self-start"
+          />
+          <TemperatureCard
+            telemetry={telemetry}
+            filamentType={(gcodeAnalysis?.filamentType as string) ?? null}
+          />
+        </div>
 
         <MotorControls
           telemetry={telemetry}
@@ -104,6 +107,7 @@ export function Dashboard() {
           isConnected={isConnected}
           className="col-span-1"
         />
+        <GcodeViewerCard telemetry={telemetry} status={status} />
       </div>
 
       <Separator />
