@@ -1,8 +1,11 @@
-import type { LayersWorkerResponse } from "@/lib/gcode/layers.worker";
+import type {
+  LayersWorkerRequest,
+  LayersWorkerResponse,
+} from "@/lib/gcode/layers.worker";
 import type { ParsedGcodeLayers } from "@/lib/gcode/layers";
 import { useQuery } from "@tanstack/react-query";
 
-function parseInWorker(url: string, signal: AbortSignal) {
+function parseInWorker(url: string, filename: string, signal: AbortSignal) {
   return new Promise<ParsedGcodeLayers>((resolve, reject) => {
     const worker = new Worker(
       new URL("../lib/gcode/layers.worker.ts", import.meta.url),
@@ -14,7 +17,8 @@ function parseInWorker(url: string, signal: AbortSignal) {
       reject(signal.reason);
     });
     worker.onmessage = (event: MessageEvent<LayersWorkerResponse>) => {
-      finish();
+      // The worker closes itself once it has saved the result to IndexedDB;
+      // terminating it here would cut that write short.
       if (event.data.ok) {
         resolve(event.data.result);
       } else {
@@ -25,7 +29,7 @@ function parseInWorker(url: string, signal: AbortSignal) {
       finish();
       reject(new Error(event.message || "Gcode worker failed"));
     };
-    worker.postMessage({ url });
+    worker.postMessage({ url, filename } satisfies LayersWorkerRequest);
   });
 }
 
@@ -38,6 +42,7 @@ export default function useGcodeLayers(filename: string | undefined) {
           `/api/printer/files/gcodes/${encodeURIComponent(filename!)}/raw`,
           window.location.origin,
         ).toString(),
+        filename!,
         signal,
       ),
     enabled: Boolean(filename),

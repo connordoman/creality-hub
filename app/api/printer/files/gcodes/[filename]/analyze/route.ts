@@ -1,10 +1,16 @@
-import { moonrakerUrl } from "@/lib/creality/config";
 import {
   GCODE_ANALYSIS_CACHE_CONTROL,
   getCachedGcodeAnalysis,
   gcodeAnalysisCacheKey,
   setCachedGcodeAnalysis,
 } from "@/lib/gcode/analysis-cache";
+import {
+  fetchGcodeMetadata,
+  GcodeFetchError,
+  gcodeFileVersion,
+  getCachedGcodeFile,
+  readCachedGcodeText,
+} from "@/lib/gcode/file-cache";
 import {
   filamentTypeFromMetadata,
   gcodeBoundsFromMetadata,
@@ -18,29 +24,6 @@ function jsonWithCache(body: GcodeAnalysis) {
   return NextResponse.json(body, {
     headers: { "Cache-Control": GCODE_ANALYSIS_CACHE_CONTROL },
   });
-}
-
-async function fetchGcodeMetadata(printerHost: string, filename: string) {
-  const url = moonrakerUrl(
-    printerHost,
-    `/server/files/metadata?filename=${encodeURIComponent(filename)}`
-  );
-
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`Moonraker metadata returned ${response.status}`);
-  }
-
-  const data = (await response.json()) as { result?: Record<string, unknown> };
-  return data.result ?? null;
 }
 
 export async function GET(
@@ -73,20 +56,17 @@ export async function GET(
       return jsonWithCache(cached);
     }
 
-    const gcodeUrl = moonrakerUrl(
-      printerHost,
-      `/server/files/gcodes/${encodeURIComponent(filename)}`
-    );
-    const gcodeResponse = await fetch(gcodeUrl, { cache: "no-store" });
-
-    if (!gcodeResponse.ok) {
+    const version = gcodeFileVersion(printerHost, filename, metadata);
+    if (!version) {
       return NextResponse.json(
-        { error: `Moonraker returned ${gcodeResponse.status}` },
-        { status: gcodeResponse.status }
+        { error: "gcode file not found on printer" },
+        { status: 404 },
       );
     }
 
-    const gcode = await gcodeResponse.text();
+    // Shares the download with the /raw route, which the viewer requests at
+    // the same time.
+    const gcode = await readCachedGcodeText(await getCachedGcodeFile(version));
     const metadataBounds = gcodeBoundsFromMetadata(metadata ?? undefined);
     const filamentType = filamentTypeFromMetadata(metadata ?? undefined);
     const analysis = parseGcodeAnalysis(gcode);
@@ -109,6 +89,12 @@ export async function GET(
     setCachedGcodeAnalysis(cacheKey, result);
     return jsonWithCache(result);
   } catch (error) {
+    if (error instanceof GcodeFetchError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Failed to reach printer";
     console.error(error);
