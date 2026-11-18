@@ -57,7 +57,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 md:gap-6 p-4 md:p-6">
       <header className="flex gap-3 flex-row items-start justify-between">
         <div>
           <div className="flex flex-row items-center gap-2 flex-wrap">
@@ -76,7 +76,7 @@ export function Dashboard() {
         </div>
       </header>
 
-      <div className="flex flex-col lg:grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+      <div className="flex flex-col lg:grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
         <CameraViewer
           className="row-span-2 col-start-1 lg:col-span-1 lg:col-start-2 lg:row-start-1"
           telemetry={telemetry}
@@ -89,7 +89,7 @@ export function Dashboard() {
           elapsedSeconds={elapsedSeconds}
           remainingSeconds={remainingSeconds}
         />
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-4 md:gap-6">
           <PrintControls
             status={status}
             onCommand={sendCommand}

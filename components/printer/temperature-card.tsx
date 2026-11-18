@@ -27,7 +27,12 @@ export function TemperatureCard({
   );
 
   return (
-    <div className={cn("grid gap-3 grid-cols-3 flex-1 items-end", className)}>
+    <div
+      className={cn(
+        "grid gap-4 md:gap-6 grid-cols-3 flex-1 items-end",
+        className,
+      )}
+    >
       <TempBlock
         label="Nozzle"
         current={telemetry.nozzleTemp}
