@@ -219,7 +219,7 @@ export function StatusCard({
             <span className="whitespace-nowrap">
               <SpoolIcon className="size-3 inline-block mr-1 mb-0.5" />
               {expectedLength?.value?.toFixed(2) ?? "\u2014"}{" "}
-              {expectedLength?.unit ?? "m"}
+              {expectedLength?.unit}
             </span>
             <br />
             <span className="whitespace-nowrap">
@@ -252,7 +252,8 @@ export function StatusCard({
             value={progress}
             indications={gcodeAnalysis?.pauses.map((pause) => ({
               percentage: pause.percentage,
-              variant: pause.reason === "filament-change" ? "secondary" : "outline",
+              variant:
+                pause.reason === "filament-change" ? "secondary" : "outline",
               title:
                 pause.reason === "filament-change"
                   ? "Filament change"

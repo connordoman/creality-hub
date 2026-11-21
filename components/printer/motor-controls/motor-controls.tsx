@@ -3,6 +3,7 @@
 import { Move3dIcon } from "lucide-react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardFooter,
   CardHeader,
@@ -43,6 +44,7 @@ import { XYControls } from "./xy-controls";
 import { ZControls } from "./z-controls";
 import { PrintCoordinates } from "./print-coordinates";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const STEP_UNITS: StepSize["unit"][] = ["mm", "%"];
 
@@ -141,12 +143,20 @@ export default function MotorControls({
   };
 
   return (
-    <Card className={className}>
+    <Card className={cn("", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Move3dIcon className="size-4" />
           Motor Controls
         </CardTitle>
+        <CardAction>
+          <PrintCoordinates
+            telemetry={telemetry}
+            columned
+            colored
+            className="mx-auto gap-3 [&>p]:gap-0"
+          />
+        </CardAction>
       </CardHeader>
       <div className="w-fit max-w-full px-4 mx-auto flex flex-row items-start gap-2 overflow-x-scroll scrollbar-none">
         {percentStepsAvailable && (
@@ -210,9 +220,6 @@ export default function MotorControls({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="">
-        <PrintCoordinates telemetry={telemetry} className="mx-auto" />
-      </CardFooter>
     </Card>
   );
 }

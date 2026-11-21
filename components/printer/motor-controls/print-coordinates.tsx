@@ -8,11 +8,17 @@ import { useMemo } from "react";
 interface PrintCoordinatesProps {
   telemetry: PrinterTelemetry;
   className?: string;
+  vertical?: boolean;
+  columned?: boolean;
+  colored?: boolean;
 }
 
 export function PrintCoordinates({
   telemetry,
   className,
+  vertical = false,
+  columned = false,
+  colored = false,
 }: PrintCoordinatesProps) {
   const position = useMemo(
     () => parseCurPosition(telemetry.curPosition),
@@ -22,20 +28,26 @@ export function PrintCoordinates({
   return (
     <div
       className={cn(
-        "grid grid-cols-3 items-center justify-items-center  text-sm whitespace-nowrap w-full",
+        "grid grid-cols-3 items-center justify-items-center  text-sm whitespace-nowrap w-full [&>p]:text-xs",
+        vertical && "grid-cols-1",
+        columned
+          ? "[&>p]:flex [&>p]:flex-col [&>p]:items-center [&>p]:justify-center [&>p]:gap-0.5"
+          : "[&>p>strong]:mr-3",
+        colored &&
+          "[&>p]:nth-1:text-red-700 [&>p]:nth-2:text-green-700 [&>p]:nth-3:text-blue-700",
         className,
       )}
     >
       <p>
-        <strong className="mr-3">X</strong>
+        <strong>X</strong>
         {formatAxisPosition(position.x)}
       </p>
       <p>
-        <strong className="mr-3">Y</strong>
+        <strong>Y</strong>
         {formatAxisPosition(position.y)}
       </p>
       <p>
-        <strong className="mr-3">Z</strong>
+        <strong>Z</strong>
         {formatAxisPosition(position.z)}
       </p>
     </div>
