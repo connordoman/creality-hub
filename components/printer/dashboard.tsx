@@ -17,6 +17,7 @@ import { formatFileName } from "@/lib/fs";
 import MotorControls from "./motor-controls/motor-controls";
 import { Separator } from "../ui/separator";
 import { GcodeViewerCard } from "./gcode-viewer-card";
+import { VersionNumber } from "../ui/version-number";
 
 export function Dashboard() {
   const { printerHost, printerName, isLoading, error } = usePrinterSettings();
@@ -113,6 +114,10 @@ export function Dashboard() {
       <Separator />
 
       <PrintHistory />
+
+      <p>
+        <VersionNumber variant="muted" size="sm" className="" />
+      </p>
     </div>
   );
 }
