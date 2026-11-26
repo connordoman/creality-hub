@@ -4,9 +4,9 @@ _This project is for fun and is not endorsed by Creality._
 
 A self-hostable web UI for Creality 3D printers.
 
-![Preview of Creality Hub mid-print](./docs/img/creality-hub-preview.png)
+![Preview of Creality Hub mid-print](./docs/img/creality-hub-preview-v2.3.0.png)
 
-[Model featured](https://makerworld.com/en/models/3128751-self-draining-sink-caddy-detergent-sponge-holder)
+[Model featured](https://www.orcaslicer.com/wiki/calibration/temp_calib)
 
 ## Features
 
@@ -21,6 +21,7 @@ A self-hostable web UI for Creality 3D printers.
 - Pause/resume/stop prints
 - Toggle built-in chamber light
 - [PWA](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps) support
+- 3D preview of build with live progress
 
 ## Compatible Printers
 
