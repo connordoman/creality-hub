@@ -34,7 +34,7 @@ export function PrintCoordinates({
           ? "[&>p]:flex [&>p]:flex-col [&>p]:items-center [&>p]:justify-center [&>p]:gap-0.5"
           : "[&>p>strong]:mr-3",
         colored &&
-          "[&>p]:nth-1:text-red-700 [&>p]:nth-2:text-green-700 [&>p]:nth-3:text-blue-700",
+          "[&>p]:nth-1:text-red-700 [&>p]:nth-2:text-green-700 [&>p]:nth-3:text-blue-700 saturate-67",
         className,
       )}
     >
